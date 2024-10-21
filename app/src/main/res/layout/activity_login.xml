@@ -59,7 +59,7 @@
                 android:drawableStart="@drawable/email"
                 android:drawablePadding="16dp"
                 android:ems="10"
-                android:hint="email"
+                android:hint="Email"
                 android:inputType="text"
                 android:padding="8dp"
                 android:textColorHint="@color/white" />
