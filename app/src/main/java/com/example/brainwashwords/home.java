@@ -37,7 +37,6 @@ public class home extends AppCompatActivity {
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_home);
         usersRef = FirebaseDatabase.getInstance().getReference("users");
-
         initializeViews();
         setupAlertDialog();
 
@@ -49,7 +48,6 @@ public class home extends AppCompatActivity {
         about = findViewById(R.id.button3); // Initialize about
         testYourself = findViewById(R.id.button1); // Initialize testYourself
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(home.this);
         isSorted = false;
 
         username = getIntent().getStringExtra("USERNAME");
@@ -84,7 +82,7 @@ public class home extends AppCompatActivity {
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(home.this, signup.class));
+                startActivity(new Intent(home.this, group_selection.class));
             }
         });
 
@@ -150,7 +148,7 @@ public class home extends AppCompatActivity {
         testYourself.setOnClickListener(new View.OnClickListener() {//alert dialog code
             @Override
             public void onClick(View v) {
-                if (isSorted = false) {
+                if (!isSorted) {
                     builder.setCancelable(true);
                     builder.setTitle("wait a minute");
                     builder.setMessage("you have to sort the words first");
