@@ -11,8 +11,9 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+
 public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
-    private List<Group> groupList;
+    private final List<Group> groupList;
 
     public GroupAdapter(List<Group> groupList) {
         this.groupList = groupList;
@@ -22,21 +23,14 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
     @Override
     public GroupViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(android.R.layout.simple_list_item_1, parent, false);
+                .inflate(R.layout.activity_word_item, parent, false);
         return new GroupViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull GroupViewHolder holder, int position) {
         Group currentGroup = groupList.get(position);
-        holder.textView.setText(currentGroup.getName());
-
-        // כשמשתמש לוחץ על קבוצה, הוא עובר למסך המילים של אותה קבוצה
-        holder.itemView.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), words.class);
-            intent.putExtra("groupId", currentGroup.getId());
-            v.getContext().startActivity(intent);
-        });
+        holder.bind(currentGroup);
     }
 
     @Override
@@ -44,13 +38,22 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
         return groupList.size();
     }
 
-    public static class GroupViewHolder extends RecyclerView.ViewHolder {
-        public TextView textView;
+    static class GroupViewHolder extends RecyclerView.ViewHolder {
+        private final TextView textView;
 
-        public GroupViewHolder(View itemView) {
+        GroupViewHolder(View itemView) {
             super(itemView);
-            textView = itemView.findViewById(android.R.id.text1);
+            textView = itemView.findViewById(R.id.wordTextView);
+        }
+
+        void bind(Group group) {
+            textView.setText(group.getName());
+
+            itemView.setOnClickListener(v -> {
+                Intent intent = new Intent(v.getContext(), words.class);
+                intent.putExtra("groupId", group.getId());
+                v.getContext().startActivity(intent);
+            });
         }
     }
 }
-
