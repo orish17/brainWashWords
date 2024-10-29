@@ -86,7 +86,6 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
             wordTextView = itemView.findViewById(R.id.wordTextView);
             knownCheckBox = itemView.findViewById(R.id.knownCheckBox);
             imageView = itemView.findViewById(R.id.imageView5);
-            workoutNum = itemView.findViewById(R.id.textView10);
         }
     }
 }

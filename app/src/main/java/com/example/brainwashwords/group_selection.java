@@ -75,7 +75,6 @@ public class group_selection extends AppCompatActivity { // או שם ה-Activit
                             groupList.clear();
                             for (QueryDocumentSnapshot document : task.getResult()) {
                                 Group group = document.toObject(Group.class);
-                                group.setId(document.getId());
                                 groupList.add(group);
                             }
                             adapter.notifyDataSetChanged();
@@ -99,6 +98,7 @@ public class group_selection extends AppCompatActivity { // או שם ה-Activit
         }
         if (recyclerView != null) {
             recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+
         }
     }
 

@@ -38,7 +38,7 @@ public class words extends AppCompatActivity {
         String groupId = getIntent().getStringExtra("groupId");
 
         // טוען את המילים מקבוצה מסוימת
-        db.collection("groups").document(groupId).collection("words")
+        db.collection("workout1_id").document("workout1_id/NynTcSM0VDGksozyTz4Y").collection("words")
                 .get()
                 .addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
@@ -51,7 +51,7 @@ public class words extends AppCompatActivity {
                         wordAdapter = new WordAdapter(wordList, db, groupId);
                         recyclerView.setAdapter(wordAdapter);
                     } else {
-                        // טיפול במקרה של כשל
+
                         Log.e("FirebaseError", "Error fetching words: " + task.getException());
                     }
                 });

@@ -99,7 +99,8 @@ public class login extends AppCompatActivity {
         String password = Password.getText().toString().trim();
         String name = Name.getText().toString().trim();
 
-        if (validateInput(name,email,password)) {
+        // TODO : return validation
+        //if (validateInput(name,email,password)) {
             User newUser = new User(email, password, name);
             String userId = usersRef.push().getKey();
 
@@ -126,7 +127,7 @@ public class login extends AppCompatActivity {
                                 }
                             }
                         });
-            }
+            //}
         }
     }
 

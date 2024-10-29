@@ -23,7 +23,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
     @Override
     public GroupViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.activity_word_item, parent, false);
+                .inflate(R.layout.recycler_view_row, parent, false);
         return new GroupViewHolder(view);
     }
 
@@ -43,15 +43,16 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
 
         GroupViewHolder(View itemView) {
             super(itemView);
-            textView = itemView.findViewById(R.id.wordTextView);
+            textView = itemView.findViewById(R.id.name);
         }
 
+
+        // TODO : handle on click group
         void bind(Group group) {
             textView.setText(group.getName());
 
             itemView.setOnClickListener(v -> {
                 Intent intent = new Intent(v.getContext(), words.class);
-                intent.putExtra("groupId", group.getId());
                 v.getContext().startActivity(intent);
             });
         }
