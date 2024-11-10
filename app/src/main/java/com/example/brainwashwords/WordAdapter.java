@@ -3,9 +3,8 @@ package com.example.brainwashwords;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.CheckBox;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -19,7 +18,6 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
     private FirebaseFirestore db;
     private String groupId;
 
-    // Constructor
     public WordAdapter(List<Word> wordList, FirebaseFirestore db, String groupId) {
         this.wordList = wordList;
         this.db = db;
@@ -30,44 +28,29 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
     @Override
     public WordViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.activity_word_item, parent, false);
+                .inflate(R.layout.item_word_sorting, parent, false);
         return new WordViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull WordViewHolder holder, int position) {
-        Word currentWord = wordList.get(position);
+        Word word = wordList.get(position);
+        holder.wordText.setText(word.getWord());
+        holder.knownCheckBox.setChecked(word.isKnown());
 
-        // בדיקה אם המילה תקינה
-        if (currentWord != null && currentWord.getWord() != null) {
-            holder.wordTextView.setText(currentWord.getWord());
-        } else {
-            holder.wordTextView.setText("Unknown word");
-        }
-
-        // בדיקה אם הסטטוס ידוע או לא
-        holder.knownCheckBox.setChecked(currentWord != null && currentWord.isKnown());
-
-        // האזנה לשינוי סטטוס
         holder.knownCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (currentWord != null && currentWord.getId() != null) {
-                // עדכון הסטטוס ב-Firestore
-                db.collection("groups").document(groupId)
-                        .collection("words").document(currentWord.getId())
-                        .update("known", isChecked)
-                        .addOnSuccessListener(aVoid -> {
-                            // הצלחה בעדכון
-                        })
-                        .addOnFailureListener(e -> {
-                            // טיפול בשגיאה
-                            e.printStackTrace();
-                        });
-            }
+            word.setKnown(isChecked);
+            updateWordInFirestore(word);
         });
+    }
 
-        // טיפול ב-imageView וב-textView נוספים אם הם בשימוש
-        holder.workoutNum.setText("Word #" + (position + 1)); // לדוגמה למספר סדרתי
-        holder.imageView.setImageResource(R.drawable.workout_1); // הצב תמונה ברירת מחדל (התאם את שם התמונה למקור שלך)
+    private void updateWordInFirestore(Word word) {
+        db.collection("groups").document(groupId)
+                .collection("words").document(word.getId())
+                .update("known", word.isKnown())
+                .addOnFailureListener(e -> {
+                    // Handle error
+                });
     }
 
     @Override
@@ -75,17 +58,14 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
         return wordList.size();
     }
 
-    public static class WordViewHolder extends RecyclerView.ViewHolder {
-        public TextView wordTextView;
-        public CheckBox knownCheckBox;
-        public ImageView imageView;
-        public TextView workoutNum;
+    static class WordViewHolder extends RecyclerView.ViewHolder {
+        TextView wordText;
+        CheckBox knownCheckBox;
 
-        public WordViewHolder(View itemView) {
+        WordViewHolder(View itemView) {
             super(itemView);
-            wordTextView = itemView.findViewById(R.id.wordTextView);
+            wordText = itemView.findViewById(R.id.wordText);
             knownCheckBox = itemView.findViewById(R.id.knownCheckBox);
-            imageView = itemView.findViewById(R.id.imageView5);
         }
     }
 }

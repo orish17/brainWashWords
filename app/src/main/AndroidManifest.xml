@@ -13,7 +13,10 @@
         android:theme="@style/Theme.BrainWashWords"
         tools:targetApi="31">
         <activity
-            android:name=".word_item"
+            android:name=".item_word_sorting"
+            android:exported="false" />
+        <activity
+            android:name=".word_sorting"
             android:exported="false" />
         <activity
             android:name=".words"
@@ -23,9 +26,6 @@
             android:exported="false" />
         <activity
             android:name=".workOut1"
-            android:exported="false" />
-        <activity
-            android:name=".sorting1"
             android:exported="false" />
         <activity
             android:name=".about"
@@ -43,11 +43,11 @@
             android:name=".login"
             android:exported="false" />
         <activity
-            android:name=".Registration"
-            android:exported="false" />
-        <activity
             android:name=".MainActivity"
             android:exported="true">
+
+
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

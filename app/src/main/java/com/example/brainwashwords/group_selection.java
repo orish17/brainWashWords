@@ -1,5 +1,6 @@
 package com.example.brainwashwords;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -47,6 +48,7 @@ public class group_selection extends AppCompatActivity { // או שם ה-Activit
         db = FirebaseFirestore.getInstance();
         loadGroups();
     }
+
 
     private void setupRecyclerView() {
         // Set layout manager
@@ -115,4 +117,5 @@ public class group_selection extends AppCompatActivity { // או שם ה-Activit
                 "Error loading groups: " + e.getMessage(),
                 Toast.LENGTH_SHORT).show();
     }
-}
+
+    }
