@@ -12,9 +12,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.brainwashwords.R;
-import com.example.brainwashwords.Word;
-import com.example.brainwashwords.WordSortingAdapter;
+import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -30,7 +28,7 @@ public class word_sorting extends AppCompatActivity {
     private List<Word> wordList;
     private String currentWorkout;
     private Spinner workoutSpinner;
-    private static final String TAG = "word_sorting";
+    private static final String TAG = "WordSortingActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +57,7 @@ public class word_sorting extends AppCompatActivity {
         db.collection("groups")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
+                    Log.d(TAG, "Documents found: " + queryDocumentSnapshots.size());
                     List<String> workouts = new ArrayList<>();
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         workouts.add(document.getId());
@@ -67,7 +66,8 @@ public class word_sorting extends AppCompatActivity {
                     if (!workouts.isEmpty()) {
                         setupWorkoutSpinner(workouts);
                         // טוען את המילים של ה-workout הראשון כברירת מחדל
-                        loadWordsForWorkout(workouts.get(0));
+                        currentWorkout = workouts.get(0);
+                        loadWordsForWorkout(currentWorkout);
                     } else {
                         Toast.makeText(this, "No workouts found", Toast.LENGTH_SHORT).show();
                     }
@@ -89,6 +89,7 @@ public class word_sorting extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedWorkout = workouts.get(position);
+                Log.d(TAG, "Selected workout: " + selectedWorkout);
                 if (!selectedWorkout.equals(currentWorkout)) {
                     currentWorkout = selectedWorkout;
                     loadWordsForWorkout(currentWorkout);
@@ -102,6 +103,7 @@ public class word_sorting extends AppCompatActivity {
 
     private void loadWordsForWorkout(String workoutId) {
         // מנקה את הרשימה הקיימת
+        Log.d(TAG, "Loading words for workout: " + workoutId);
         wordList.clear();
 
         // טוען את המילים מה-workout הנבחר
@@ -118,9 +120,13 @@ public class word_sorting extends AppCompatActivity {
                         wordList.add(word);
                     }
 
+                    Log.d(TAG, "Loaded words: " + wordList.size()); // הוסף לוג כדי לוודא את מספר המילים שנמצאו
+
+                    Log.d(TAG, "Adapter updated with words: " + wordList.size());
                     adapter.notifyDataSetChanged();
 
                     if (wordList.isEmpty()) {
+                        Log.d(TAG, "No words found in this workout");
                         Toast.makeText(this, "No words in this workout",
                                 Toast.LENGTH_SHORT).show();
                     }
@@ -141,14 +147,14 @@ public class word_sorting extends AppCompatActivity {
         // מוחק את המילה מה-workout הנוכחי
         db.collection("groups")
                 .document(word.getCurrentWorkout())
-                .collection("words")
+                .collection("Words")
                 .document(word.getId())
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     // מוסיף את המילה ל-workout החדש
                     db.collection("groups")
                             .document(newWorkout)
-                            .collection("words")
+                            .collection("Words")
                             .add(wordData)
                             .addOnSuccessListener(documentReference -> {
                                 Toast.makeText(this, "Word moved successfully",

@@ -1,5 +1,8 @@
 package com.example.brainwashwords;
 
+import static android.content.ContentValues.TAG;
+
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -28,21 +31,20 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
     @Override
     public WordViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_word_sorting, parent, false);
+                .inflate(R.layout.activity_word_item, parent, false);
         return new WordViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull WordViewHolder holder, int position) {
         Word word = wordList.get(position);
-        holder.wordText.setText(word.getWord());
-        holder.knownCheckBox.setChecked(word.isKnown());
-
-        holder.knownCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            word.setKnown(isChecked);
-            updateWordInFirestore(word);
-        });
+        if (holder.wordTextView != null) {
+            holder.wordTextView.setText(word.getWord());
+        } else {
+            Log.e(TAG, "TextView is null in onBindViewHolder for position: " + position);
+        }
     }
+
 
     private void updateWordInFirestore(Word word) {
         db.collection("groups").document(groupId)
@@ -53,19 +55,20 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
                 });
     }
 
+
     @Override
     public int getItemCount() {
         return wordList.size();
     }
 
-    static class WordViewHolder extends RecyclerView.ViewHolder {
-        TextView wordText;
-        CheckBox knownCheckBox;
+    public static class WordViewHolder extends RecyclerView.ViewHolder {
+        TextView wordTextView;
+        CheckBox wordCheckBox;
 
-        WordViewHolder(View itemView) {
+        public WordViewHolder(View itemView) {
             super(itemView);
-            wordText = itemView.findViewById(R.id.wordText);
-            knownCheckBox = itemView.findViewById(R.id.knownCheckBox);
+            wordTextView = itemView.findViewById(R.id.wordTextView);
+            wordCheckBox = itemView.findViewById(R.id.wordCheckBox);
         }
     }
 }
