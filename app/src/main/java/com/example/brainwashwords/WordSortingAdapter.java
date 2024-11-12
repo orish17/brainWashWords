@@ -35,7 +35,7 @@ public class WordSortingAdapter extends RecyclerView.Adapter<WordSortingAdapter.
     @Override
     public WordViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_word_sorting, parent, false);
+                .inflate(R.layout.activity_word_item, parent, false);
         return new WordViewHolder(view);
     }
 
@@ -56,7 +56,7 @@ public class WordSortingAdapter extends RecyclerView.Adapter<WordSortingAdapter.
 
         WordViewHolder(View itemView) {
             super(itemView);
-            wordText = itemView.findViewById(R.id.wordText);
+            wordText = itemView.findViewById(R.id.wordTextView);
             workoutSpinner = itemView.findViewById(R.id.workoutSpinner);
         }
 
