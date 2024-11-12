@@ -1,27 +1,24 @@
 package com.example.brainwashwords;
 
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
+import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-
-import java.util.ArrayList;
 import java.util.List;
 
 public class WordSortingAdapter extends RecyclerView.Adapter<WordSortingAdapter.WordViewHolder> {
+
     private List<Word> wordList;
     private OnWordActionListener listener;
 
+    // ממשק לפעולות מיוחדות (אם נדרש)
     public interface OnWordActionListener {
         void onWordMoved(Word word, String newWorkout);
     }
@@ -35,14 +32,32 @@ public class WordSortingAdapter extends RecyclerView.Adapter<WordSortingAdapter.
     @Override
     public WordViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.item_word_sorting, parent, false);
+                .inflate(R.layout.activity_word_item, parent, false);
         return new WordViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull WordViewHolder holder, int position) {
         Word word = wordList.get(position);
-        holder.bind(word);
+
+        // מציג את המילה
+        holder.wordText.setText(word.getWord());
+
+        // לוגיקה עבור CheckBox
+        holder.wordCheckBox.setChecked(word.isKnown());
+        holder.wordCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            word.setKnown(isChecked); // מעדכן את הסטטוס של המילה
+        });
+
+        // לוגיקה עבור כפתור להצגת פירוש
+        holder.showDefinitionButton.setOnClickListener(v -> {
+            String definition = word.getDefinition(); // פירוש המילה
+            if (definition != null && !definition.isEmpty()) {
+                Toast.makeText(holder.itemView.getContext(), "פירוש: " + definition, Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(holder.itemView.getContext(), "אין פירוש זמין", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     @Override
@@ -50,61 +65,17 @@ public class WordSortingAdapter extends RecyclerView.Adapter<WordSortingAdapter.
         return wordList.size();
     }
 
+    // מחלקת ViewHolder
     class WordViewHolder extends RecyclerView.ViewHolder {
         TextView wordText;
-        Spinner workoutSpinner;
+        CheckBox wordCheckBox;
+        Button showDefinitionButton;
 
         WordViewHolder(View itemView) {
             super(itemView);
-            wordText = itemView.findViewById(R.id.wordText);
-            workoutSpinner = itemView.findViewById(R.id.workoutSpinner);
-        }
-
-        void bind(final Word word) {
-            wordText.setText(word.getWord());
-
-            // Load available workouts into spinner
-            FirebaseFirestore.getInstance().collection("workouts")
-                    .get()
-                    .addOnSuccessListener(queryDocumentSnapshots -> {
-                        List<String> workouts = new ArrayList<>();
-                        for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                            workouts.add(document.getId());
-                        }
-
-                        ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(
-                                itemView.getContext(),
-                                android.R.layout.simple_spinner_item,
-                                workouts);
-                        spinnerAdapter.setDropDownViewResource(
-                                android.R.layout.simple_spinner_dropdown_item);
-                        workoutSpinner.setAdapter(spinnerAdapter);
-
-                        // Set current workout selection if it exists
-                        String currentWorkout = word.getCurrentWorkout();
-                        if (currentWorkout != null && workouts.contains(currentWorkout)) {
-                            int position = workouts.indexOf(currentWorkout);
-                            workoutSpinner.setSelection(position);
-                        }
-
-                        workoutSpinner.setOnItemSelectedListener(
-                                new AdapterView.OnItemSelectedListener() {
-                                    @Override
-                                    public void onItemSelected(AdapterView<?> parent,
-                                                               View view,
-                                                               int position,
-                                                               long id) {
-                                        String selectedWorkout = workouts.get(position);
-                                        String currentWorkout = word.getCurrentWorkout();
-                                        if (currentWorkout == null || !selectedWorkout.equals(currentWorkout)) {
-                                            listener.onWordMoved(word, selectedWorkout);
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onNothingSelected(AdapterView<?> parent) {}
-                                });
-                    });
+            wordText = itemView.findViewById(R.id.wordTextView);
+            wordCheckBox = itemView.findViewById(R.id.wordCheckBox);
+            showDefinitionButton = itemView.findViewById(R.id.definitionButton); // מזהה הכפתור
         }
     }
 }

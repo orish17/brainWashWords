@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">BrainWashWords</string>
+    <string name="definition">הצג פירוש</string>
 </resources>

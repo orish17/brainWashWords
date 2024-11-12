@@ -5,7 +5,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -30,10 +32,18 @@ public class word_sorting extends AppCompatActivity {
     private Spinner workoutSpinner;
     private static final String TAG = "WordSortingActivity";
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_word_sorting);
+        setContentView(R.layout.activity_word_sorting);  // וודא שזוהי הקריאה הראשונה
+
+        // הוסף כותרת מעל ה-Spinner
+        TextView spinnerTitle = new TextView(this);
+        spinnerTitle.setText("Select Workout:");
+        spinnerTitle.setTextSize(18);
+        spinnerTitle.setPadding(16, 16, 16, 8);
+        ((LinearLayout) findViewById(R.id.mainLayout)).addView(spinnerTitle);
 
         db = FirebaseFirestore.getInstance();
         recyclerView = findViewById(R.id.recyclerView);
@@ -41,8 +51,17 @@ public class word_sorting extends AppCompatActivity {
         wordList = new ArrayList<>();
 
         setupRecyclerView();
+
+        // הוסף כותרת מעל ה-RecyclerView
+        TextView recyclerTitle = new TextView(this);
+        recyclerTitle.setText("Words List:");
+        recyclerTitle.setTextSize(18);
+        recyclerTitle.setPadding(16, 16, 16, 8);
+        ((LinearLayout) findViewById(R.id.mainLayout)).addView(recyclerTitle);
+
         loadWorkouts();
     }
+
 
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -60,6 +79,7 @@ public class word_sorting extends AppCompatActivity {
                     Log.d(TAG, "Documents found: " + queryDocumentSnapshots.size());
                     List<String> workouts = new ArrayList<>();
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
+                        Log.d(TAG, "Document found: " + document.getId());
                         workouts.add(document.getId());
                     }
 
@@ -112,31 +132,26 @@ public class word_sorting extends AppCompatActivity {
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         String wordText = document.getString("word");
-                        boolean known = document.getBoolean("known") != null ?
-                                document.getBoolean("known") : false;
+                        if (wordText == null || wordText.isEmpty()) {
+                            Log.d(TAG, "Word field is missing or empty for document: " + document.getId());
+                            continue;
+                        }
+                        boolean known = document.getBoolean("known") != null ? document.getBoolean("known") : false;
 
-                        Word word = new Word(wordText, known, document.getId());
-                        word.setCurrentWorkout(workoutId);
+                        // שימוש בקונסטרקטור המתוקן
+                        Word word = new Word(wordText, known, "", document.getId(), workoutId);
                         wordList.add(word);
                     }
 
-                    Log.d(TAG, "Loaded words: " + wordList.size()); // הוסף לוג כדי לוודא את מספר המילים שנמצאו
-
-                    Log.d(TAG, "Adapter updated with words: " + wordList.size());
                     adapter.notifyDataSetChanged();
-
-                    if (wordList.isEmpty()) {
-                        Log.d(TAG, "No words found in this workout");
-                        Toast.makeText(this, "No words in this workout",
-                                Toast.LENGTH_SHORT).show();
-                    }
+                    Log.d(TAG, "Loaded words: " + wordList.size());
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error loading words for workout: " + workoutId, e);
-                    Toast.makeText(this, "Error loading words: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Error loading words: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
-    }
+    };
+
 
     private void moveWordToWorkout(Word word, String newWorkout) {
         // שומר את המידע של המילה
@@ -147,14 +162,14 @@ public class word_sorting extends AppCompatActivity {
         // מוחק את המילה מה-workout הנוכחי
         db.collection("groups")
                 .document(word.getCurrentWorkout())
-                .collection("Words")
+                .collection("words")
                 .document(word.getId())
                 .delete()
                 .addOnSuccessListener(aVoid -> {
                     // מוסיף את המילה ל-workout החדש
                     db.collection("groups")
                             .document(newWorkout)
-                            .collection("Words")
+                            .collection("words")
                             .add(wordData)
                             .addOnSuccessListener(documentReference -> {
                                 Toast.makeText(this, "Word moved successfully",
@@ -174,3 +189,5 @@ public class word_sorting extends AppCompatActivity {
                 });
     }
 }
+
+

@@ -23,6 +23,8 @@ public class words extends AppCompatActivity {
     private List<Word> wordList;
     private ProgressBar progressBar;
 
+    private static final String TAG = "WordsActivity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,22 +65,30 @@ public class words extends AppCompatActivity {
                 .addOnCompleteListener(task -> {
                     showLoading(false);
 
-                    if (task.isSuccessful()) {
+                    if (task.isSuccessful() && task.getResult() != null) {
                         wordList.clear();
                         for (QueryDocumentSnapshot document : task.getResult()) {
                             String word = document.getString("word");
                             boolean known = document.getBoolean("known") != null ?
                                     document.getBoolean("known") : false;
-                            wordList.add(new Word(word, known, document.getId()));
+                            String definition = document.getString("definition") != null ?
+                                    document.getString("definition") : "No definition available";
+
+                            if (word == null || word.isEmpty()) {
+                                Log.e(TAG, "Skipping document with missing 'word' field: " + document.getId());
+                                continue;
+                            }
+
+                            wordList.add(new Word(word, known, definition, document.getId(), groupId));
+
                         }
                         wordAdapter.notifyDataSetChanged();
 
                         // Show empty state if needed
                         showEmptyState(wordList.isEmpty());
                     } else {
-                        Log.e("FirebaseError", "Error fetching words: " + task.getException());
-                        Toast.makeText(this, "Error loading words: " + task.getException().getMessage(),
-                                Toast.LENGTH_SHORT).show();
+                        Log.e(TAG, "Error fetching words: ", task.getException());
+                        Toast.makeText(this, "Error loading words.", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -96,7 +106,9 @@ public class words extends AppCompatActivity {
         View emptyView = findViewById(R.id.emptyView);
         if (emptyView != null) {
             emptyView.setVisibility(show ? View.VISIBLE : View.GONE);
-            recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+            if (recyclerView != null) {
+                recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
+            }
         }
     }
 }
