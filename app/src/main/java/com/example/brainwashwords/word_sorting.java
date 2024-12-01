@@ -98,26 +98,46 @@ public class word_sorting extends AppCompatActivity {
     }
 
     private void loadWordsForWorkout(String workoutId) {
+        Log.d(TAG, "Loading words for workout: " + workoutId);
         wordList.clear();
+
         db.collection("groups").document(workoutId).collection("words")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        String wordText = document.getString("word");
-                        boolean known = document.getBoolean("known") != null && document.getBoolean("known");
+                        // לוג לכל המסמך
+                        Log.d("Firestore", "Loaded document data: " + document.getData());
 
-                        if (wordText != null && !wordText.isEmpty()) {
-                            Word word = new Word(wordText, known, "", document.getId(), workoutId);
-                            wordList.add(word);
+                        // טוען את המילה והפירוש
+                        String wordText = document.getString("word");
+                        String definition = document.getString("definition");
+                        boolean known = document.getBoolean("known") != null ? document.getBoolean("known") : false;
+
+                        Log.d(TAG, "Loaded word: " + wordText + ", definition: " + definition);
+
+                        if (wordText == null || wordText.isEmpty()) {
+                            Log.d(TAG, "Word field is missing or empty for document: " + document.getId());
+                            continue;
                         }
+
+                        // יוצר את אובייקט ה-Word
+                        Word word = new Word(wordText, known, definition, document.getId(), workoutId);
+                        Log.d(TAG, "Word object created: " + word.getWord() + ", definition: " + word.getDefinition());
+                        wordList.add(word);
                     }
+
                     adapter.notifyDataSetChanged();
+                    if (wordList.isEmpty()) {
+                        Toast.makeText(this, "No words in this workout", Toast.LENGTH_SHORT).show();
+                    }
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error loading words for workout: " + workoutId, e);
                     Toast.makeText(this, "Error loading words: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
+
+
 
     private void moveWordToWorkout(Word word, String newWorkout) {
         Map<String, Object> wordData = new HashMap<>();

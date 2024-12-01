@@ -1,5 +1,6 @@
 package com.example.brainwashwords;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -91,12 +92,16 @@ public class WordSortingAdapter extends RecyclerView.Adapter<WordSortingAdapter.
 
             showDefinitionButton.setOnClickListener(v -> {
                 String definition = word.getDefinition();
+                Log.d("Definition Button", "Definition for word: " + definition); // לוג לבדיקה
                 if (definition != null && !definition.isEmpty()) {
                     Toast.makeText(itemView.getContext(), "פירוש: " + definition, Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(itemView.getContext(), "אין פירוש זמין", Toast.LENGTH_SHORT).show();
                 }
             });
+
+
+
 
             // טען Workouts ל-Spinner רק אם הרשימה זמינה
             if (!workouts.isEmpty()) {
@@ -128,5 +133,6 @@ public class WordSortingAdapter extends RecyclerView.Adapter<WordSortingAdapter.
                 });
             }
         }
+
     }
 }
