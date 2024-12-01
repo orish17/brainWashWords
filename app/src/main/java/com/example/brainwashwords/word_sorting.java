@@ -14,7 +14,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.firestore.CollectionReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -32,60 +31,38 @@ public class word_sorting extends AppCompatActivity {
     private Spinner workoutSpinner;
     private static final String TAG = "WordSortingActivity";
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_word_sorting);  // וודא שזוהי הקריאה הראשונה
+        setContentView(R.layout.activity_word_sorting);
 
-        // הוסף כותרת מעל ה-Spinner
-        TextView spinnerTitle = new TextView(this);
-        spinnerTitle.setText("Select Workout:");
-        spinnerTitle.setTextSize(18);
-        spinnerTitle.setPadding(16, 16, 16, 8);
-        ((LinearLayout) findViewById(R.id.mainLayout)).addView(spinnerTitle);
-
+        // Initialize Firestore and UI elements
         db = FirebaseFirestore.getInstance();
         recyclerView = findViewById(R.id.recyclerView);
         workoutSpinner = findViewById(R.id.workoutSpinner);
         wordList = new ArrayList<>();
 
         setupRecyclerView();
-
-        // הוסף כותרת מעל ה-RecyclerView
-        TextView recyclerTitle = new TextView(this);
-        recyclerTitle.setText("Words List:");
-        recyclerTitle.setTextSize(18);
-        recyclerTitle.setPadding(16, 16, 16, 8);
-        ((LinearLayout) findViewById(R.id.mainLayout)).addView(recyclerTitle);
-
         loadWorkouts();
     }
 
-
     private void setupRecyclerView() {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new WordSortingAdapter(wordList, (word, newWorkout) -> {
-            moveWordToWorkout(word, newWorkout);
-        });
+        adapter = new WordSortingAdapter(wordList, (word, newWorkout) -> moveWordToWorkout(word, newWorkout));
         recyclerView.setAdapter(adapter);
     }
 
     private void loadWorkouts() {
-        // קודם נטען את כל ה-workouts מ-Firestore
         db.collection("groups")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
-                    Log.d(TAG, "Documents found: " + queryDocumentSnapshots.size());
                     List<String> workouts = new ArrayList<>();
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        Log.d(TAG, "Document found: " + document.getId());
                         workouts.add(document.getId());
                     }
 
                     if (!workouts.isEmpty()) {
                         setupWorkoutSpinner(workouts);
-                        // טוען את המילים של ה-workout הראשון כברירת מחדל
                         currentWorkout = workouts.get(0);
                         loadWordsForWorkout(currentWorkout);
                     } else {
@@ -94,8 +71,7 @@ public class word_sorting extends AppCompatActivity {
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error loading workouts", e);
-                    Toast.makeText(this, "Error loading workouts: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Error loading workouts: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 
@@ -109,7 +85,6 @@ public class word_sorting extends AppCompatActivity {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selectedWorkout = workouts.get(position);
-                Log.d(TAG, "Selected workout: " + selectedWorkout);
                 if (!selectedWorkout.equals(currentWorkout)) {
                     currentWorkout = selectedWorkout;
                     loadWordsForWorkout(currentWorkout);
@@ -117,77 +92,58 @@ public class word_sorting extends AppCompatActivity {
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
+            public void onNothingSelected(AdapterView<?> parent) {
+            }
         });
     }
 
     private void loadWordsForWorkout(String workoutId) {
-        // מנקה את הרשימה הקיימת
-        Log.d(TAG, "Loading words for workout: " + workoutId);
         wordList.clear();
-
-        // טוען את המילים מה-workout הנבחר
         db.collection("groups").document(workoutId).collection("words")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
                         String wordText = document.getString("word");
-                        if (wordText == null || wordText.isEmpty()) {
-                            Log.d(TAG, "Word field is missing or empty for document: " + document.getId());
-                            continue;
+                        boolean known = document.getBoolean("known") != null && document.getBoolean("known");
+
+                        if (wordText != null && !wordText.isEmpty()) {
+                            Word word = new Word(wordText, known, "", document.getId(), workoutId);
+                            wordList.add(word);
                         }
-                        boolean known = document.getBoolean("known") != null ? document.getBoolean("known") : false;
-
-                        // שימוש בקונסטרקטור המתוקן
-                        Word word = new Word(wordText, known, "", document.getId(), workoutId);
-                        wordList.add(word);
                     }
-
                     adapter.notifyDataSetChanged();
-                    Log.d(TAG, "Loaded words: " + wordList.size());
                 })
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error loading words for workout: " + workoutId, e);
                     Toast.makeText(this, "Error loading words: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
-    };
-
+    }
 
     private void moveWordToWorkout(Word word, String newWorkout) {
-        // שומר את המידע של המילה
         Map<String, Object> wordData = new HashMap<>();
         wordData.put("word", word.getWord());
         wordData.put("known", word.isKnown());
 
-        // מוחק את המילה מה-workout הנוכחי
         db.collection("groups")
                 .document(word.getCurrentWorkout())
                 .collection("words")
                 .document(word.getId())
                 .delete()
-                .addOnSuccessListener(aVoid -> {
-                    // מוסיף את המילה ל-workout החדש
-                    db.collection("groups")
-                            .document(newWorkout)
-                            .collection("words")
-                            .add(wordData)
-                            .addOnSuccessListener(documentReference -> {
-                                Toast.makeText(this, "Word moved successfully",
-                                        Toast.LENGTH_SHORT).show();
-                                loadWordsForWorkout(currentWorkout);
-                            })
-                            .addOnFailureListener(e -> {
-                                Log.e(TAG, "Error adding word to new workout", e);
-                                Toast.makeText(this, "Error moving word: " + e.getMessage(),
-                                        Toast.LENGTH_SHORT).show();
-                            });
-                })
+                .addOnSuccessListener(aVoid -> db.collection("groups")
+                        .document(newWorkout)
+                        .collection("words")
+                        .add(wordData)
+                        .addOnSuccessListener(documentReference -> {
+                            Toast.makeText(this, "Word moved successfully", Toast.LENGTH_SHORT).show();
+                            loadWordsForWorkout(currentWorkout);
+                        })
+                        .addOnFailureListener(e -> {
+                            Log.e(TAG, "Error adding word to new workout", e);
+                            Toast.makeText(this, "Error moving word: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }))
                 .addOnFailureListener(e -> {
                     Log.e(TAG, "Error deleting word from current workout", e);
-                    Toast.makeText(this, "Error moving word: " + e.getMessage(),
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Error moving word: " + e.getMessage(), Toast.LENGTH_SHORT).show();
                 });
     }
 }
-
-

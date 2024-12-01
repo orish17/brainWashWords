@@ -1,37 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:padding="8dp"
     android:background="#343434">
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:id="@+id/wordTextView"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_weight="1"
+        android:text="Word"
+        android:textColor="@android:color/white"
+        android:textSize="16sp" />
 
-        <TextView
-            android:id="@+id/wordTextView"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Word"
-            android:textColor="@color/white"
-            android:textSize="16sp" />
-
-        <CheckBox
-            android:id="@+id/wordCheckBox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Known"
-            android:textColor="#000" />
-    </LinearLayout>
+    <CheckBox
+        android:id="@+id/wordCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Known"
+        android:textColor="#000" />
 
     <Button
         android:id="@+id/definitionButton"
-        android:layout_width="106dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="280dp"
-        android:layout_marginTop="8dp"
         android:text="@string/definition" />
 </LinearLayout>
