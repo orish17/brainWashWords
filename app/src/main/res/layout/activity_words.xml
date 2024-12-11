@@ -1,29 +1,37 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#343434"
-    android:padding="16dp">
-
+    android:orientation="vertical"
+    android:background="@color/reg">
+    <!-- RecyclerView להצגת רשימת המילים -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:padding="8dp" />
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/reg" />
 
-
-    <ProgressBar
-        android:id="@+id/progressBar"
-        android:layout_width="wrap_content"
+    <!-- תא להצגת הפירוש בתחתית -->
+    <LinearLayout
+        android:id="@+id/definition_container"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:visibility="gone"/>
+        android:background="@color/niceYellow"
+        android:padding="16dp"
+        android:orientation="vertical"
+        android:elevation="4dp"
+        android:visibility="gone">
 
-    <TextView
-        android:id="@+id/emptyView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:text="No words found"
-        android:visibility="gone"/>
+        <TextView
+            android:id="@+id/definition_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textSize="18sp"
+            android:gravity="center"
+            android:padding="16dp"
+            android:textColor="@android:color/black" />
+    </LinearLayout>
 
-</RelativeLayout>
+
+</LinearLayout>

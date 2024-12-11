@@ -15,7 +15,7 @@ public class Word {
         this.currentWorkout = currentWorkout;
     }
 
-    // Getters and Setters
+    // Getters
     public String getWord() {
         return word;
     }
@@ -36,12 +36,8 @@ public class Word {
         return currentWorkout;
     }
 
+    // Setters
     public void setKnown(boolean known) {
-        this.isKnown = known;
+        isKnown = known;
     }
-
-    public void setDefinition(String definition) {
-        this.definition = definition;
-    }
-
 }
