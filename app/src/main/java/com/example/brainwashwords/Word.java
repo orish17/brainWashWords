@@ -2,42 +2,61 @@ package com.example.brainwashwords;
 
 public class Word {
     private String word;
-    private boolean isKnown;
     private String definition;
+    private boolean known;
     private String id;
-    private String currentWorkout;
+    private String groupId;
 
-    public Word(String word, boolean isKnown, String definition, String id, String currentWorkout) {
+    // Constructor
+    public Word(String word, String definition, boolean known, String id, String groupId) {
         this.word = word;
-        this.isKnown = isKnown;
         this.definition = definition;
+        this.known = known;
         this.id = id;
-        this.currentWorkout = currentWorkout;
+        this.groupId = groupId;
     }
 
-    // Getters
+    // Default constructor for Firebase
+    public Word() {}
+
+    // Getters and setters
     public String getWord() {
         return word;
     }
 
-    public boolean isKnown() {
-        return isKnown;
+    public void setWord(String word) {
+        this.word = word;
     }
 
     public String getDefinition() {
         return definition;
     }
 
+    public void setDefinition(String definition) {
+        this.definition = definition;
+    }
+
+    public boolean isKnown() {
+        return known;
+    }
+
+    public void setKnown(boolean known) {
+        this.known = known;
+    }
+
     public String getId() {
         return id;
     }
 
-    public String getCurrentWorkout() {
-        return currentWorkout;
+    public void setId(String id) {
+        this.id = id;
     }
 
-    // Setters
-    public void setKnown(boolean known) {
-        isKnown = known;
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
     }
 }

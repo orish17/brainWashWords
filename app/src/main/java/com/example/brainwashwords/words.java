@@ -1,11 +1,13 @@
 package com.example.brainwashwords;
 
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.Toast;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -17,98 +19,59 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class words extends AppCompatActivity {
-    private FirebaseFirestore db;
-    private RecyclerView recyclerView;
-    private WordAdapter wordAdapter;
-    private List<Word> wordList;
-    private ProgressBar progressBar;
 
-    private static final String TAG = "WordsActivity";
+    private RecyclerView recyclerView;
+    private LinearLayout definitionContainer;
+    private TextView definitionText;
+    private FirebaseFirestore db;
+    private List<Word> wordList;
+    private Handler handler = new Handler();
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_words);
 
-        // Initialize views
+        // התחברות לרכיבי UI
         recyclerView = findViewById(R.id.recyclerView);
-        progressBar = findViewById(R.id.progressBar);
+        definitionContainer = findViewById(R.id.definition_container);
+        definitionText = findViewById(R.id.definition_text_view);
 
-        // Initialize Firebase
         db = FirebaseFirestore.getInstance();
-
-        // Initialize word list
         wordList = new ArrayList<>();
 
-        // Setup RecyclerView
         setupRecyclerView();
-
-        // Load words
-        String groupId = getIntent().getStringExtra("groupId");
-        if (groupId == null) {
-            groupId = "workout1"; // Default fallback
-        }
-        loadWords(groupId);
+        fetchWords();
     }
 
     private void setupRecyclerView() {
+        WordAdapter adapter = new WordAdapter(wordList, this, this::showDefinition, db);
+
+        recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        wordAdapter = new WordAdapter(wordList, db, "workout1");
-        recyclerView.setAdapter(wordAdapter);
     }
 
-    private void loadWords(String groupId) {
-        showLoading(true);
-
-        db.collection("groups").document(groupId).collection("words")
-                .get()
-                .addOnCompleteListener(task -> {
-                    showLoading(false);
-
-                    if (task.isSuccessful() && task.getResult() != null) {
+    private void fetchWords() {
+        db.collection("groups").document("workout1").collection("words")
+                .get().addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
                         wordList.clear();
                         for (QueryDocumentSnapshot document : task.getResult()) {
-                            String word = document.getString("word");
-                            boolean known = document.getBoolean("known") != null ?
-                                    document.getBoolean("known") : false;
-                            String definition = document.getString("definition") != null ?
-                                    document.getString("definition") : "No definition available";
-
-                            if (word == null || word.isEmpty()) {
-                                Log.e(TAG, "Skipping document with missing 'word' field: " + document.getId());
-                                continue;
-                            }
-
-                            wordList.add(new Word(word, known, definition, document.getId(), groupId));
-
+                            Word word = document.toObject(Word.class);
+                            wordList.add(word);
                         }
-                        wordAdapter.notifyDataSetChanged();
-
-                        // Show empty state if needed
-                        showEmptyState(wordList.isEmpty());
+                        recyclerView.getAdapter().notifyDataSetChanged();
+                        Log.d("FirestoreDebug", "Words loaded: " + wordList.size());
                     } else {
-                        Log.e(TAG, "Error fetching words: ", task.getException());
-                        Toast.makeText(this, "Error loading words.", Toast.LENGTH_SHORT).show();
+                        Log.e("FirestoreDebug", "Error fetching words: ", task.getException());
                     }
                 });
     }
 
-    private void showLoading(boolean show) {
-        if (progressBar != null) {
-            progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-        }
-        if (recyclerView != null) {
-            recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
-        }
-    }
 
-    private void showEmptyState(boolean show) {
-        View emptyView = findViewById(R.id.emptyView);
-        if (emptyView != null) {
-            emptyView.setVisibility(show ? View.VISIBLE : View.GONE);
-            if (recyclerView != null) {
-                recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
-            }
-        }
+    private void showDefinition(String definition) {
+        definitionText.setText(definition); // הצגת הפירוש
+        definitionContainer.setVisibility(View.VISIBLE); // הצגת התיבה
+        handler.postDelayed(() -> definitionContainer.setVisibility(View.GONE), 5000); // הסתרת התיבה
     }
 }
