@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "494986206209",
+    "project_id": "brainwashwords",
+    "storage_bucket": "brainwashwords.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:494986206209:android:9f53a4a82827bd7f24f400",
+        "android_client_info": {
+          "package_name": "com.example.brainwashwords"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDrMSkplXMNdVr1gFkWEErqHpKyi7lsEhM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

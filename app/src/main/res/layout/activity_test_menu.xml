@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="24dp"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@color/white">
+
+    <TextView
+        android:text="בחר סוג מבחן"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="32dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"/>
+
+    <Button
+        android:id="@+id/btnMultipleChoice"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="רב-ברירה" />
+
+    <Button
+        android:id="@+id/btnFillInBlank"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="השלמת משפט"
+        android:layout_marginTop="12dp" />
+
+    <Button
+        android:id="@+id/btnAudioTest"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="מבחן שמיעה"
+        android:layout_marginTop="12dp" />
+
+    <Button
+        android:id="@+id/btnAiQuiz"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="מבחן AI 🤖"
+        android:layout_marginTop="12dp" />
+</LinearLayout>
