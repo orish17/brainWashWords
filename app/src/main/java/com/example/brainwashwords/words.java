@@ -2,7 +2,7 @@ package com.example.brainwashwords;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -26,13 +26,12 @@ public class words extends AppCompatActivity {
     private WordAdapter wordAdapter;
     private List<Word> wordList;
     private FirebaseFirestore db;
-    private Button doneButton;
 
     private LinearLayout definitionContainer;
     private TextView definitionTextView;
-    private android.os.Handler handler = new android.os.Handler();
+    private Handler handler = new Handler();
 
-    private String workoutId; // נוסיף משתנה לזיהוי הקבוצה שנבחרה
+    private String workoutId;  // מקבל את שם הקבוצה שנבחרה (workout1 / workout2 וכו')
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -45,21 +44,22 @@ public class words extends AppCompatActivity {
         wordList = new ArrayList<>();
         db = FirebaseFirestore.getInstance();
 
-        // קבלת ה-workoutId שנשלח מהמסך הקודם
-        workoutId = getIntent().getStringExtra("WORKOUT_ID");
-        if (workoutId == null || workoutId.isEmpty()) {
-            workoutId = "workout1"; // ברירת מחדל
-        }
-
         definitionContainer = findViewById(R.id.definition_container);
         definitionTextView = findViewById(R.id.definition_text_view);
+
+        // קבלת ה-ID של הקבוצה (אם אין – נשתמש ב-workout1 כברירת מחדל)
+        workoutId = getIntent().getStringExtra("WORKOUT_ID");
+        if (workoutId == null || workoutId.isEmpty()) {
+            workoutId = "workout1";
+        }
 
         loadWordsFromFirebase();
 
         wordAdapter = new WordAdapter(wordList, db, this, this::showTranslation);
         recyclerView.setAdapter(wordAdapter);
 
-        Button doneButton = findViewById(R.id.btnDoneSorting);
+        // כפתור סיום מיון
+        Button doneButton = findViewById(R.id.btnDoneSortin);
         doneButton.setOnClickListener(v -> {
             Toast.makeText(this, "Sorting saved! You can now take a test.", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(this, home.class);
@@ -90,7 +90,7 @@ public class words extends AppCompatActivity {
     private void showTranslation(String translation) {
         definitionTextView.setText(translation);
         definitionContainer.setVisibility(View.VISIBLE);
-        handler.removeCallbacksAndMessages(null);
+        handler.removeCallbacksAndMessages(null); // ביטול תזמון קודם
         handler.postDelayed(() -> definitionContainer.setVisibility(View.GONE), 5000);
     }
 

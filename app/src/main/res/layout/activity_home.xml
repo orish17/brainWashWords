@@ -77,7 +77,6 @@
         android:layout_marginEnd="106dp"
         android:layout_marginBottom="55dp"
         android:background="@drawable/background_bts1"
-        android:enabled="true"
         android:text="Test yourself"
         android:textAppearance="@style/TextAppearance.AppCompat.Large"
         android:textColor="#AAAAAA"

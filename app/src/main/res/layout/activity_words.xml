@@ -2,11 +2,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/tanAccent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <!-- RecyclerView להצגת רשימת המילים -->
-
-    <!-- חלונית התרגום -->
+    <!-- רשימת המילים -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
@@ -14,6 +13,7 @@
         android:layout_weight="1"
         android:background="@color/reg" />
 
+    <!-- תיבת הפירוש -->
     <LinearLayout
         android:id="@+id/definition_container"
         android:layout_width="match_parent"
@@ -24,7 +24,6 @@
         android:padding="16dp"
         android:visibility="gone">
 
-        <!-- תיבת הטקסט להצגת הפירוש -->
         <TextView
             android:id="@+id/definition_text_view"
             android:layout_width="match_parent"
@@ -35,13 +34,14 @@
             android:textSize="18sp" />
     </LinearLayout>
 
+    <!-- כפתור סיום -->
     <Button
-        android:id="@+id/btnDoneSorting"
-        android:layout_width="wrap_content"
+        android:id="@+id/btnDoneSortin"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Done Sorting"
-        android:layout_marginTop="16dp"
-        android:layout_gravity="center_horizontal"/>
-
-
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:backgroundTint="@color/black"
+        android:layout_marginTop="12dp" />
 </LinearLayout>

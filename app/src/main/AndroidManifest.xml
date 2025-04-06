@@ -14,9 +14,6 @@
         android:theme="@style/Theme.BrainWashWords"
         tools:targetApi="31">
         <activity
-            android:name=".item_word_sorting"
-            android:exported="false" />
-        <activity
             android:name=".word_sorting"
             android:exported="false" />
         <activity
@@ -28,38 +25,28 @@
         <activity
             android:name=".workOut1"
             android:exported="false" />
-
-        <activity android:name=".QuizResultActivity" />
-
-        <activity android:name=".FillInBlankActivity" />
-
-        <activity android:name=".AudioTestActivity" />
-
         <activity
             android:name=".about"
             android:exported="false" />
-
-        <activity android:name=".MultipleChoiceActivity" />
-
         <activity
             android:name=".home"
             android:exported="false" />
-
-        <activity
-            android:name=".main_workout"
-            android:exported="false" />
+        <activity android:name=".AiQuizActivity" />
+        <activity android:name=".AudioTestActivity" />
+        <activity android:name=".FillInBlankActivity" />
+        <activity android:name=".MultipleChoiceActivity" />
+        <activity android:name=".QuizResultActivity" />
+        <activity android:name=".TestMenuActivity" />
         <activity
             android:name=".signup"
             android:exported="false" />
         <activity
             android:name=".login"
             android:exported="false" />
-
-        <activity android:name=".TestMenuActivity" />
-
         <activity
             android:name=".MainActivity"
             android:exported="true">
+
 
 
 

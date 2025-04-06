@@ -26,10 +26,10 @@ public class home extends AppCompatActivity {
     private AppCompatButton button, about, testYourself;
     private TextView usernameDisplay;
     private DatabaseReference usersRef;
-    private String username;
-    private AlertDialog.Builder builder;
-    private boolean isSorted = false;
     private FirebaseFirestore firestore;
+    private String username;
+    private boolean isSorted = false;
+    private AlertDialog.Builder builder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +79,9 @@ public class home extends AppCompatActivity {
                     int count = 0;
                     for (QueryDocumentSnapshot doc : result) {
                         Boolean known = doc.getBoolean("known");
-                        if (Boolean.TRUE.equals(known)) count++;
+                        if (Boolean.TRUE.equals(known)) {
+                            count++;
+                        }
                     }
                     isSorted = count >= 4;
                     updateTestButtonState(isSorted);
@@ -89,20 +91,19 @@ public class home extends AppCompatActivity {
     private void updateTestButtonState(boolean enabled) {
         testYourself.setEnabled(enabled);
         testYourself.setTextColor(enabled ? Color.WHITE : Color.GRAY);
-
         if (enabled) {
             testYourself.animate()
                     .scaleX(1.1f)
                     .scaleY(1.1f)
                     .setDuration(200)
-                    .withEndAction(() -> testYourself.animate().scaleX(1f).scaleY(1f).setDuration(150));
+                    .withEndAction(() ->
+                            testYourself.animate().scaleX(1f).scaleY(1f).setDuration(150));
         }
     }
 
     private void setupClickListeners() {
         button.setOnClickListener(v -> startActivity(new Intent(home.this, group_selection.class)));
         about.setOnClickListener(v -> startActivity(new Intent(home.this, about.class)));
-
         testYourself.setOnClickListener(v -> {
             if (!isSorted) {
                 builder.show();

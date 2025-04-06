@@ -4,20 +4,22 @@ public class Group {
     private String id;
     private String name;
 
+    // קונסטרקטור ריק - חובה בשביל Firebase
     public Group() {
-        // Required for Firebase
     }
 
+    // קונסטרקטור מלא
     public Group(String id, String name) {
         this.id = id;
         this.name = name;
     }
 
-    // אם אתה משתמש רק בשם - אתה יכול להשתמש בזה גם:
+    // קונסטרקטור עם שם בלבד
     public Group(String name) {
         this.name = name;
     }
 
+    // גטרים וסטרים
     public String getId() {
         return id;
     }
