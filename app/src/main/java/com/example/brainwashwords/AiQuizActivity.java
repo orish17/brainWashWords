@@ -34,7 +34,7 @@ public class AiQuizActivity extends AppCompatActivity {
     private Button nextQuestionButton;
 
     private String correctAnswer = "";
-    private final String API_KEY = "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"; // <-- כאן תכניס את ה-API KEY שלך
+    private final String API_KEY = ""; // <-- כאן תכניס את ה-API KEY שלך
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
