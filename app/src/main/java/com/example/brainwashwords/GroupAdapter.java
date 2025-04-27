@@ -11,7 +11,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
-
 public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
     private final List<Group> groupList;
 
@@ -46,13 +45,12 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
             textView = itemView.findViewById(R.id.name);
         }
 
-
-        // TODO : handle on click group
         void bind(Group group) {
             textView.setText(group.getName());
 
             itemView.setOnClickListener(v -> {
                 Intent intent = new Intent(v.getContext(), words.class);
+                intent.putExtra("workoutName", group.getName()); // שולח את השם של הקבוצה!
                 v.getContext().startActivity(intent);
             });
         }

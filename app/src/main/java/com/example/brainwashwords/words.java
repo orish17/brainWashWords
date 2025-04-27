@@ -9,7 +9,6 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -31,12 +30,17 @@ public class words extends AppCompatActivity {
     private TextView definitionTextView;
     private Handler handler = new Handler();
 
-    private String workoutId;  // מקבל את שם הקבוצה שנבחרה (workout1 / workout2 וכו')
+    private String workoutName; // משתמשים רק בזה
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_words);
+
+        workoutName = getIntent().getStringExtra("workoutName");
+        if (workoutName == null || workoutName.isEmpty()) {
+            workoutName = "workout1"; // ברירת מחדל אם אין
+        }
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -47,16 +51,10 @@ public class words extends AppCompatActivity {
         definitionContainer = findViewById(R.id.definition_container);
         definitionTextView = findViewById(R.id.definition_text_view);
 
-        // קבלת ה-ID של הקבוצה (אם אין – נשתמש ב-workout1 כברירת מחדל)
-        workoutId = getIntent().getStringExtra("WORKOUT_ID");
-        if (workoutId == null || workoutId.isEmpty()) {
-            workoutId = "workout1";
-        }
-
-        loadWordsFromFirebase();
-
         wordAdapter = new WordAdapter(wordList, db, this, this::showTranslation);
         recyclerView.setAdapter(wordAdapter);
+
+        loadWordsFromFirebase();
 
         // כפתור סיום מיון
         Button doneButton = findViewById(R.id.btnDoneSortin);
@@ -70,7 +68,7 @@ public class words extends AppCompatActivity {
     }
 
     private void loadWordsFromFirebase() {
-        db.collection("groups").document(workoutId).collection("words")
+        db.collection("groups").document(workoutName).collection("words")
                 .get()
                 .addOnSuccessListener(queryDocumentSnapshots -> {
                     wordList.clear();
@@ -80,7 +78,7 @@ public class words extends AppCompatActivity {
                         boolean isKnown = document.getBoolean("known") != null && document.getBoolean("known");
 
                         if (wordText != null) {
-                            wordList.add(new Word(wordText, isKnown, definition, document.getId(), workoutId));
+                            wordList.add(new Word(wordText, isKnown, definition, document.getId(), workoutName));
                         }
                     }
                     wordAdapter.notifyDataSetChanged();

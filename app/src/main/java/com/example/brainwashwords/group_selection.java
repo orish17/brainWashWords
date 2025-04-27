@@ -33,33 +33,21 @@ public class group_selection extends AppCompatActivity { // או שם ה-Activit
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_selection);
 
-        // Initialize views
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
 
-
-        // Initialize data
         groupList = new ArrayList<>();
 
-        // Setup RecyclerView
         setupRecyclerView();
 
-        // Initialize Firestore and load data
         db = FirebaseFirestore.getInstance();
         loadGroups();
     }
 
-
     private void setupRecyclerView() {
-        // Set layout manager
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
-
-        // Initialize and set adapter
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new GroupAdapter(groupList);
         recyclerView.setAdapter(adapter);
-
-
         recyclerView.setHasFixedSize(true);
     }
 
@@ -81,7 +69,6 @@ public class group_selection extends AppCompatActivity { // או שם ה-Activit
                             }
                             adapter.notifyDataSetChanged();
 
-                            // Show empty state if needed
                             if (groupList.isEmpty()) {
                                 showEmptyState(true);
                             } else {
@@ -100,7 +87,6 @@ public class group_selection extends AppCompatActivity { // או שם ה-Activit
         }
         if (recyclerView != null) {
             recyclerView.setVisibility(show ? View.GONE : View.VISIBLE);
-
         }
     }
 
@@ -117,5 +103,4 @@ public class group_selection extends AppCompatActivity { // או שם ה-Activit
                 "Error loading groups: " + e.getMessage(),
                 Toast.LENGTH_SHORT).show();
     }
-
-    }
+}

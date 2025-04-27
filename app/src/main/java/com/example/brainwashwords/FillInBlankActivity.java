@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -46,9 +45,9 @@ public class FillInBlankActivity extends AppCompatActivity {
     private int totalQuestions = 0;
     private static final int MAX_QUESTIONS = 10;
 
-    private final String apiKey = "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";
-    private final String endpoint = "https://openrouter.ai/api/v1/chat/completions";
-    private final String model = "mistralai/mistral-7b-instruct";
+    private final String apiKey = "YOUR_OPENAI_API_KEY"; // <-- תכניס את ה-API KEY שלך כאן
+
+    private String workoutName;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,13 +60,18 @@ public class FillInBlankActivity extends AppCompatActivity {
 
         db = FirebaseFirestore.getInstance();
 
-        loadWords();
+        workoutName = getIntent().getStringExtra("workoutName");
+        if (workoutName == null) {
+            workoutName = "workout1";
+        }
+
+        loadWords(workoutName);
 
         submitBtn.setOnClickListener(v -> checkAnswer());
     }
 
-    private void loadWords() {
-        db.collection("groups").document("workout1").collection("words")
+    private void loadWords(String workoutName) {
+        db.collection("groups").document(workoutName).collection("words")
                 .get()
                 .addOnSuccessListener(query -> {
                     wordList.clear();
@@ -77,7 +81,7 @@ public class FillInBlankActivity extends AppCompatActivity {
                         Boolean known = doc.getBoolean("known");
 
                         if (wordText != null && Boolean.TRUE.equals(known)) {
-                            wordList.add(new Word(wordText, true, definition, doc.getId(), "workout1"));
+                            wordList.add(new Word(wordText, true, definition, doc.getId(), workoutName));
                         }
                     }
 
@@ -103,30 +107,32 @@ public class FillInBlankActivity extends AppCompatActivity {
 
         OkHttpClient client = new OkHttpClient();
 
-        JSONObject message = new JSONObject();
+        JSONObject jsonBody = new JSONObject();
         try {
+            jsonBody.put("model", "gpt-3.5-turbo");
+
+            JSONArray messages = new JSONArray();
+            JSONObject message = new JSONObject();
             message.put("role", "user");
-            message.put("content", "Write a sentence using the word '" + word + "', but replace the word with a blank (____). Respond only with the sentence.");
+            message.put("content", "Write an English sentence using the word '" + word + "', but replace the word with a blank (____). Respond only with the sentence.");
+            messages.put(message);
+
+            jsonBody.put("messages", messages);
+
         } catch (JSONException e) {
             sentenceText.setText("Error building message.");
             return;
         }
 
-        JSONObject body = new JSONObject();
-        try {
-            body.put("model", model);
-            body.put("messages", new JSONArray().put(message));
-        } catch (JSONException e) {
-            sentenceText.setText("Error building request.");
-            return;
-        }
+        RequestBody body = RequestBody.create(
+                jsonBody.toString(), MediaType.parse("application/json")
+        );
 
         Request request = new Request.Builder()
-                .url(endpoint)
+                .url("https://api.openai.com/v1/chat/completions")
                 .addHeader("Authorization", "Bearer " + apiKey)
-                .addHeader("HTTP-Referer", "https://yourapp.com")
-                .addHeader("X-Title", "BrainWashOrish")
-                .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
+                .addHeader("Content-Type", "application/json")
+                .post(body)
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
@@ -137,20 +143,23 @@ public class FillInBlankActivity extends AppCompatActivity {
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                String resStr = response.body().string();
-                Log.d("AI_RESPONSE", resStr);
+                if (response.isSuccessful()) {
+                    String resStr = response.body().string();
+                    try {
+                        JSONObject json = new JSONObject(resStr);
+                        String content = json.getJSONArray("choices")
+                                .getJSONObject(0)
+                                .getJSONObject("message")
+                                .getString("content");
 
-                try {
-                    JSONObject json = new JSONObject(resStr);
-                    String content = json.getJSONArray("choices")
-                            .getJSONObject(0)
-                            .getJSONObject("message")
-                            .getString("content");
-
-                    runOnUiThread(() -> sentenceText.setText(content.trim()));
-                } catch (Exception e) {
-                    Log.e("AI_PARSE_ERROR", "Error parsing AI response: " + e.getMessage());
-                    runOnUiThread(() -> sentenceText.setText("Error parsing AI response"));
+                        runOnUiThread(() -> sentenceText.setText(content.trim()));
+                    } catch (Exception e) {
+                        Log.e("AI_PARSE_ERROR", "Error parsing AI response: " + e.getMessage());
+                        runOnUiThread(() -> sentenceText.setText("Error parsing AI response"));
+                    }
+                } else {
+                    Log.e("AI_ERROR", response.code() + ": " + response.message());
+                    runOnUiThread(() -> sentenceText.setText("AI error: " + response.code()));
                 }
             }
         });

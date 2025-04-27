@@ -3,7 +3,11 @@ package com.example.brainwashwords;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.*;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -11,23 +15,26 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import okhttp3.*;
-
 import java.io.IOException;
-import java.util.Locale;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class AiQuizActivity extends AppCompatActivity {
 
     private TextView aiSentenceText;
     private EditText userInput;
-    private Button checkAnswerButton, nextQuestionButton;
+    private Button checkAnswerButton;
     private TextView resultText;
+    private Button nextQuestionButton;
 
-    private final String apiKey = "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"; //
-    private final String endpoint = "https://openrouter.ai/api/v1/chat/completions";
-    private final String model = "mistralai/mistral-7b-instruct";
-
-    private String correctWord = "absorb"; // לדוגמה – בהמשך נטען אקראית
+    private String correctAnswer = "";
+    private final String API_KEY = "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"; // <-- כאן תכניס את ה-API KEY שלך
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,84 +44,98 @@ public class AiQuizActivity extends AppCompatActivity {
         aiSentenceText = findViewById(R.id.aiSentenceText);
         userInput = findViewById(R.id.userInput);
         checkAnswerButton = findViewById(R.id.checkAnswerButton);
-        nextQuestionButton = findViewById(R.id.nextQuestionButton);
         resultText = findViewById(R.id.resultText);
+        nextQuestionButton = findViewById(R.id.nextQuestionButton);
+
+        loadNewQuestion();
 
         checkAnswerButton.setOnClickListener(v -> checkAnswer());
-        nextQuestionButton.setOnClickListener(v -> generateSentence());
-
-        generateSentence();
+        nextQuestionButton.setOnClickListener(v -> loadNewQuestion());
     }
 
-    private void generateSentence() {
-        resultText.setVisibility(View.GONE);
-        userInput.setText("");
+    private void loadNewQuestion() {
         aiSentenceText.setText("AI is thinking...");
-
-        // בהמשך נחליף את זה במילה אקראית שהמשתמש מכיר
-        correctWord = "absorb";
+        userInput.setText("");
+        resultText.setVisibility(View.GONE);
 
         OkHttpClient client = new OkHttpClient();
 
-        JSONObject message = new JSONObject();
+        JSONObject jsonBody = new JSONObject();
         try {
+            jsonBody.put("model", "gpt-3.5-turbo");
+
+            JSONArray messages = new JSONArray();
+            JSONObject message = new JSONObject();
             message.put("role", "user");
-            message.put("content", "Create an English sentence using the word '" + correctWord +
-                    "', but replace the word with a blank (____). Respond only with the sentence.");
+            message.put("content", "Create an English sentence with a missing word. Write the sentence, then in a new line write 'Missing word:' and specify the missing word.");
+            messages.put(message);
+
+            jsonBody.put("messages", messages);
+
         } catch (JSONException e) {
-            aiSentenceText.setText("Error building message.");
-            return;
+            e.printStackTrace();
         }
 
-        JSONObject body = new JSONObject();
-        try {
-            body.put("model", model);
-            body.put("messages", new JSONArray().put(message));
-        } catch (JSONException e) {
-            aiSentenceText.setText("Error building request.");
-            return;
-        }
+        RequestBody body = RequestBody.create(
+                jsonBody.toString(), MediaType.parse("application/json")
+        );
 
         Request request = new Request.Builder()
-                .url(endpoint)
-                .addHeader("Authorization", "Bearer " + apiKey)
-                .addHeader("HTTP-Referer", "https://yourapp.com")
-                .addHeader("X-Title", "BrainWashOrish")
-                .post(RequestBody.create(body.toString(), MediaType.parse("application/json")))
+                .url("https://api.openai.com/v1/chat/completions")
+                .addHeader("Authorization", "Bearer " + API_KEY)
+                .addHeader("Content-Type", "application/json")
+                .post(body)
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                runOnUiThread(() -> aiSentenceText.setText("Failed to connect to AI."));
+                runOnUiThread(() -> {
+                    aiSentenceText.setText("Failed to load question.");
+                    Toast.makeText(AiQuizActivity.this, "Network error", Toast.LENGTH_SHORT).show();
+                });
+                e.printStackTrace();
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                String resStr = response.body().string();
-                Log.d("AI_RESPONSE", resStr);
+                if (response.isSuccessful()) {
+                    String responseData = response.body().string();
+                    try {
+                        JSONObject json = new JSONObject(responseData);
+                        JSONArray choices = json.getJSONArray("choices");
+                        JSONObject messageObj = choices.getJSONObject(0).getJSONObject("message");
+                        String content = messageObj.getString("content");
 
-                try {
-                    JSONObject json = new JSONObject(resStr);
-                    String content = json.getJSONArray("choices")
-                            .getJSONObject(0)
-                            .getJSONObject("message")
-                            .getString("content");
+                        // פיצול השאלה מהתשובה
+                        String[] parts = content.split("Missing word:");
+                        if (parts.length == 2) {
+                            String question = parts[0].trim();
+                            correctAnswer = parts[1].trim();
 
-                    runOnUiThread(() -> aiSentenceText.setText(content.trim()));
-                } catch (Exception e) {
-                    runOnUiThread(() -> aiSentenceText.setText("Failed to parse AI response."));
+                            runOnUiThread(() -> aiSentenceText.setText(question));
+                        } else {
+                            runOnUiThread(() -> aiSentenceText.setText("Invalid response from AI."));
+                        }
+
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    Log.e("AI_ERROR", response.code() + ": " + response.message());
                 }
             }
         });
     }
 
     private void checkAnswer() {
-        String userAnswer = userInput.getText().toString().trim().toLowerCase(Locale.ROOT);
-        if (userAnswer.equals(correctWord.toLowerCase())) {
-            resultText.setText("✅ Correct!");
+        String userAnswer = userInput.getText().toString().trim();
+        if (userAnswer.equalsIgnoreCase(correctAnswer)) {
+            resultText.setText("Correct!");
+            resultText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         } else {
-            resultText.setText("❌ Incorrect. The correct word was: " + correctWord);
+            resultText.setText("Incorrect. The missing word was: " + correctAnswer);
+            resultText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
         }
         resultText.setVisibility(View.VISIBLE);
     }

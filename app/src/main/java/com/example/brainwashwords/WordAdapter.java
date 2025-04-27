@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
@@ -27,6 +28,7 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
     private List<Word> wordList;
     private FirebaseFirestore db;
     private TextToSpeech tts;
+    private boolean isTtsReady = false;
     private OnDefinitionClickListener callback;
 
     public WordAdapter(List<Word> wordList, FirebaseFirestore db, Context context, OnDefinitionClickListener callback) {
@@ -38,7 +40,9 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
         this.tts = new TextToSpeech(context, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 int result = tts.setLanguage(Locale.US);
-                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
+                    isTtsReady = true;
+                } else {
                     Log.e("TTS", "Language not supported or missing data.");
                 }
             } else {
@@ -58,7 +62,6 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
     @Override
     public void onBindViewHolder(@NonNull WordViewHolder holder, int position) {
         Word word = wordList.get(position);
-
         holder.wordTextView.setText(word.getWord());
 
         holder.definitionButton.setOnClickListener(v -> {
@@ -69,6 +72,10 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
         });
 
         holder.speakButton.setOnClickListener(v -> {
+            if (!isTtsReady) {
+                Toast.makeText(holder.itemView.getContext(), "🔈 Text-to-Speech not ready", Toast.LENGTH_SHORT).show();
+                return;
+            }
             if (word.getWord() != null) {
                 tts.speak(word.getWord(), TextToSpeech.QUEUE_FLUSH, null, null);
             }
