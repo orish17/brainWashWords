@@ -1,6 +1,7 @@
 package com.example.brainwashwords;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -38,17 +39,20 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
 
         // Initialize TextToSpeech
         this.tts = new TextToSpeech(context, status -> {
+            Log.d("TTS", "TTS onInit status: " + status);
             if (status == TextToSpeech.SUCCESS) {
                 int result = tts.setLanguage(Locale.US);
+                Log.d("TTS", "TTS setLanguage result: " + result);
                 if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
                     isTtsReady = true;
+                    Log.d("TTS", "TTS is ready!");
                 } else {
                     Log.e("TTS", "Language not supported or missing data.");
                 }
             } else {
                 Log.e("TTS", "Initialization failed.");
             }
-        });
+        }); // <-- סוגרים פה יפה
     }
 
     @NonNull
@@ -77,7 +81,9 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
                 return;
             }
             if (word.getWord() != null) {
-                tts.speak(word.getWord(), TextToSpeech.QUEUE_FLUSH, null, null);
+                Bundle params = new Bundle();
+                params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f);
+                tts.speak(word.getWord(), TextToSpeech.QUEUE_FLUSH, params, "wordID");
             }
         });
 

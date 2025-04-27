@@ -5,7 +5,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,7 +33,9 @@ public class AiQuizActivity extends AppCompatActivity {
     private Button nextQuestionButton;
 
     private String correctAnswer = "";
-    private final String API_KEY = ""; // <-- כאן תכניס את ה-API KEY שלך
+    private final String apiKey = "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"; // כאן תשים את המפתח מ-OpenRouter!!
+
+    private boolean isWaitingForResponse = false; // 🔥 משתנה לניהול בקשות
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,7 +51,13 @@ public class AiQuizActivity extends AppCompatActivity {
         loadNewQuestion();
 
         checkAnswerButton.setOnClickListener(v -> checkAnswer());
-        nextQuestionButton.setOnClickListener(v -> loadNewQuestion());
+        nextQuestionButton.setOnClickListener(v -> {
+            if (!isWaitingForResponse) {
+                loadNewQuestion();
+            } else {
+                Toast.makeText(this, "Please wait for the AI to respond...", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void loadNewQuestion() {
@@ -58,72 +65,89 @@ public class AiQuizActivity extends AppCompatActivity {
         userInput.setText("");
         resultText.setVisibility(View.GONE);
 
+        if (apiKey == null || apiKey.isEmpty()) {
+            Toast.makeText(this, "⚠️ API Key missing. Check your configuration.", Toast.LENGTH_LONG).show();
+            aiSentenceText.setText("Missing API key.");
+            return;
+        }
+
+        isWaitingForResponse = true;
+        nextQuestionButton.setEnabled(false);
+
         OkHttpClient client = new OkHttpClient();
 
         JSONObject jsonBody = new JSONObject();
         try {
-            jsonBody.put("model", "gpt-3.5-turbo");
-
+            jsonBody.put("model", "mistralai/mistral-7b-instruct");
+            // 💬 ככה OpenRouter רוצה
             JSONArray messages = new JSONArray();
             JSONObject message = new JSONObject();
             message.put("role", "user");
             message.put("content", "Create an English sentence with a missing word. Write the sentence, then in a new line write 'Missing word:' and specify the missing word.");
             messages.put(message);
-
             jsonBody.put("messages", messages);
 
         } catch (JSONException e) {
             e.printStackTrace();
+            return;
         }
 
-        RequestBody body = RequestBody.create(
-                jsonBody.toString(), MediaType.parse("application/json")
-        );
-
         Request request = new Request.Builder()
-                .url("https://api.openai.com/v1/chat/completions")
-                .addHeader("Authorization", "Bearer " + API_KEY)
+                .url("https://openrouter.ai/api/v1/chat/completions")  // 💬 כתובת של OpenRouter
+                .addHeader("Authorization", "Bearer " + apiKey)
                 .addHeader("Content-Type", "application/json")
-                .post(body)
+                .addHeader("HTTP-Referer", "https://brainwashwords.com")  // 💬 חייב לשים משהו, אפשר דומיין פיקטיבי
+                .addHeader("X-Title", "BrainWashWords App") // 💬 לא חובה, אבל נחמד
+                .post(RequestBody.create(jsonBody.toString(), MediaType.parse("application/json")))
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> {
-                    aiSentenceText.setText("Failed to load question.");
-                    Toast.makeText(AiQuizActivity.this, "Network error", Toast.LENGTH_SHORT).show();
+                    aiSentenceText.setText("Failed to connect to AI.");
+                    Toast.makeText(AiQuizActivity.this, "❌ Network error", Toast.LENGTH_SHORT).show();
+                    isWaitingForResponse = false;
+                    nextQuestionButton.setEnabled(true);
                 });
                 e.printStackTrace();
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    String responseData = response.body().string();
+                String responseData = response.body().string();
+                Log.d("AI_RESPONSE", responseData);
+
+                runOnUiThread(() -> {
+                    isWaitingForResponse = false;
+                    nextQuestionButton.setEnabled(true);
+
+                    if (!response.isSuccessful()) {
+                        aiSentenceText.setText("Error: " + response.code());
+                        Toast.makeText(AiQuizActivity.this, "❌ AI server error: " + response.code(), Toast.LENGTH_SHORT).show();
+                        Log.e("AI_ERROR", response.code() + ": " + response.message());
+                        return;
+                    }
+
                     try {
                         JSONObject json = new JSONObject(responseData);
                         JSONArray choices = json.getJSONArray("choices");
                         JSONObject messageObj = choices.getJSONObject(0).getJSONObject("message");
                         String content = messageObj.getString("content");
 
-                        // פיצול השאלה מהתשובה
                         String[] parts = content.split("Missing word:");
                         if (parts.length == 2) {
                             String question = parts[0].trim();
                             correctAnswer = parts[1].trim();
-
-                            runOnUiThread(() -> aiSentenceText.setText(question));
+                            aiSentenceText.setText(question);
                         } else {
-                            runOnUiThread(() -> aiSentenceText.setText("Invalid response from AI."));
+                            aiSentenceText.setText("Invalid AI response.");
                         }
-
                     } catch (JSONException e) {
-                        e.printStackTrace();
+                        aiSentenceText.setText("Failed to parse AI response.");
+                        Log.e("AI_PARSE_ERROR", e.getMessage());
                     }
-                } else {
-                    Log.e("AI_ERROR", response.code() + ": " + response.message());
-                }
+                });
             }
         });
     }
@@ -131,10 +155,10 @@ public class AiQuizActivity extends AppCompatActivity {
     private void checkAnswer() {
         String userAnswer = userInput.getText().toString().trim();
         if (userAnswer.equalsIgnoreCase(correctAnswer)) {
-            resultText.setText("Correct!");
+            resultText.setText("✔️ Correct!");
             resultText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         } else {
-            resultText.setText("Incorrect. The missing word was: " + correctAnswer);
+            resultText.setText("❌ Incorrect. The missing word was: " + correctAnswer);
             resultText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
         }
         resultText.setVisibility(View.VISIBLE);

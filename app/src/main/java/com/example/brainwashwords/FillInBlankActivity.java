@@ -45,7 +45,9 @@ public class FillInBlankActivity extends AppCompatActivity {
     private int totalQuestions = 0;
     private static final int MAX_QUESTIONS = 10;
 
-    private final String apiKey = "YOUR_OPENAI_API_KEY"; // <-- תכניס את ה-API KEY שלך כאן
+    private final String apiKey = "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"; // 💬 תכניס כאן את מפתח OpenRouter שלך
+
+    private boolean isWaitingForResponse = false;
 
     private String workoutName;
 
@@ -86,7 +88,7 @@ public class FillInBlankActivity extends AppCompatActivity {
                     }
 
                     if (wordList.size() < 4) {
-                        Toast.makeText(this, "Please mark at least 4 known words to start the test", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Please mark at least 4 known words to start the test.", Toast.LENGTH_LONG).show();
                         finish();
                     } else {
                         showNextQuestion();
@@ -95,6 +97,11 @@ public class FillInBlankActivity extends AppCompatActivity {
     }
 
     private void showNextQuestion() {
+        if (isWaitingForResponse) {
+            Toast.makeText(this, "Wait for the AI to respond...", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         userInput.setText("");
         Collections.shuffle(wordList);
         currentWord = wordList.get(0);
@@ -104,62 +111,69 @@ public class FillInBlankActivity extends AppCompatActivity {
 
     private void generateSentence(String word) {
         sentenceText.setText("AI is thinking...");
+        isWaitingForResponse = true;
 
         OkHttpClient client = new OkHttpClient();
 
         JSONObject jsonBody = new JSONObject();
         try {
-            jsonBody.put("model", "gpt-3.5-turbo");
-
+            jsonBody.put("model", "mistralai/mistral-7b-instruct");
+            // OpenRouter uses this model naming
             JSONArray messages = new JSONArray();
             JSONObject message = new JSONObject();
             message.put("role", "user");
             message.put("content", "Write an English sentence using the word '" + word + "', but replace the word with a blank (____). Respond only with the sentence.");
             messages.put(message);
-
             jsonBody.put("messages", messages);
 
         } catch (JSONException e) {
-            sentenceText.setText("Error building message.");
+            runOnUiThread(() -> sentenceText.setText("Error building request."));
             return;
         }
 
-        RequestBody body = RequestBody.create(
-                jsonBody.toString(), MediaType.parse("application/json")
-        );
-
         Request request = new Request.Builder()
-                .url("https://api.openai.com/v1/chat/completions")
+                .url("https://openrouter.ai/api/v1/chat/completions")
                 .addHeader("Authorization", "Bearer " + apiKey)
                 .addHeader("Content-Type", "application/json")
-                .post(body)
+                .addHeader("HTTP-Referer", "https://brainwashwords.com") // חשוב!
+                .addHeader("X-Title", "BrainWashWords App")
+                .post(RequestBody.create(jsonBody.toString(), MediaType.parse("application/json")))
                 .build();
 
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
-                runOnUiThread(() -> sentenceText.setText("Failed to connect to AI."));
+                runOnUiThread(() -> {
+                    sentenceText.setText("❌ Failed to connect to AI.");
+                    isWaitingForResponse = false;
+                });
+                e.printStackTrace();
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
-                if (response.isSuccessful()) {
-                    String resStr = response.body().string();
-                    try {
-                        JSONObject json = new JSONObject(resStr);
-                        String content = json.getJSONArray("choices")
-                                .getJSONObject(0)
-                                .getJSONObject("message")
-                                .getString("content");
+                isWaitingForResponse = false;
 
-                        runOnUiThread(() -> sentenceText.setText(content.trim()));
-                    } catch (Exception e) {
-                        Log.e("AI_PARSE_ERROR", "Error parsing AI response: " + e.getMessage());
-                        runOnUiThread(() -> sentenceText.setText("Error parsing AI response"));
-                    }
-                } else {
+                if (!response.isSuccessful()) {
+                    runOnUiThread(() -> sentenceText.setText("❌ AI Error: " + response.code()));
                     Log.e("AI_ERROR", response.code() + ": " + response.message());
-                    runOnUiThread(() -> sentenceText.setText("AI error: " + response.code()));
+                    return;
+                }
+
+                String resStr = response.body().string();
+                Log.d("AI_RESPONSE", resStr);
+
+                try {
+                    JSONObject json = new JSONObject(resStr);
+                    String content = json.getJSONArray("choices")
+                            .getJSONObject(0)
+                            .getJSONObject("message")
+                            .getString("content");
+
+                    runOnUiThread(() -> sentenceText.setText(content.trim()));
+                } catch (Exception e) {
+                    runOnUiThread(() -> sentenceText.setText("Error parsing AI response"));
+                    Log.e("AI_PARSE_ERROR", e.getMessage());
                 }
             }
         });
