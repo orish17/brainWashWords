@@ -13,7 +13,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 public class TestMenuActivity extends AppCompatActivity {
 
-    Button btnMultipleChoice, btnFillInBlank, btnAudioTest, btnAiQuiz;
+    Button btnMultipleChoice, btnFillInBlank, btnAudioTest, btnAiQuiz, btnStt;
     private FirebaseFirestore db;
     private int knownWordsCount = 0;
 
@@ -26,6 +26,7 @@ public class TestMenuActivity extends AppCompatActivity {
         btnFillInBlank = findViewById(R.id.btnFillInBlank);
         btnAudioTest = findViewById(R.id.btnAudioTest);
         btnAiQuiz = findViewById(R.id.btnAiQuiz);
+        btnStt = findViewById(R.id.btnStt);
 
         db = FirebaseFirestore.getInstance();
 
@@ -55,6 +56,8 @@ public class TestMenuActivity extends AppCompatActivity {
                                 activityClass = AudioTestActivity.class;
                             else if (view.getId() == R.id.btnAiQuiz)
                                 activityClass = AiQuizActivity.class;
+                            else if (view.getId() == R.id.btnStt)
+                                activityClass = SpeechToTextTestActivity.class;
 
                             if (activityClass != null)
                                 startActivity(new Intent(this, activityClass));
@@ -70,6 +73,8 @@ public class TestMenuActivity extends AppCompatActivity {
         btnFillInBlank.setOnClickListener(protectedClickListener);
         btnAudioTest.setOnClickListener(protectedClickListener);
         btnAiQuiz.setOnClickListener(protectedClickListener);
+        btnStt.setOnClickListener(protectedClickListener);
+
     }
 
     private void checkKnownWords() {

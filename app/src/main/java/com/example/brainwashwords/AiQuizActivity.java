@@ -1,10 +1,12 @@
 package com.example.brainwashwords;
 
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,16 +28,17 @@ import okhttp3.Response;
 
 public class AiQuizActivity extends AppCompatActivity {
 
-    private TextView aiSentenceText;
+    private TextView aiSentenceText, resultText, timerText;
     private EditText userInput;
-    private Button checkAnswerButton;
-    private TextView resultText;
-    private Button nextQuestionButton;
+    private Button checkAnswerButton, nextQuestionButton;
+    private Switch modeSwitch;
 
     private String correctAnswer = "";
-    private final String apiKey = "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"; // כאן תשים את המפתח מ-OpenRouter!!
+    private boolean isWaitingForResponse = false;
+    private boolean isTestMode = false;
+    private CountDownTimer countDownTimer;
 
-    private boolean isWaitingForResponse = false; // 🔥 משתנה לניהול בקשות
+    private final String apiKey = "YOUR_API_KEY_HERE"; // החלף במפתח שלך
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,10 +50,21 @@ public class AiQuizActivity extends AppCompatActivity {
         checkAnswerButton = findViewById(R.id.checkAnswerButton);
         resultText = findViewById(R.id.resultText);
         nextQuestionButton = findViewById(R.id.nextQuestionButton);
+        modeSwitch = findViewById(R.id.modeSwitch);
+        timerText = findViewById(R.id.timerText);
 
         loadNewQuestion();
 
+        modeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            isTestMode = isChecked;
+            timerText.setVisibility(isTestMode ? View.VISIBLE : View.GONE);
+            Toast.makeText(this,
+                    isTestMode ? "Test Mode Activated" : "Practice Mode Activated",
+                    Toast.LENGTH_SHORT).show();
+        });
+
         checkAnswerButton.setOnClickListener(v -> checkAnswer());
+
         nextQuestionButton.setOnClickListener(v -> {
             if (!isWaitingForResponse) {
                 loadNewQuestion();
@@ -64,9 +78,14 @@ public class AiQuizActivity extends AppCompatActivity {
         aiSentenceText.setText("AI is thinking...");
         userInput.setText("");
         resultText.setVisibility(View.GONE);
+        timerText.setVisibility(View.GONE);
+
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
 
         if (apiKey == null || apiKey.isEmpty()) {
-            Toast.makeText(this, "⚠️ API Key missing. Check your configuration.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "\u26a0\ufe0f API Key missing. Check your configuration.", Toast.LENGTH_LONG).show();
             aiSentenceText.setText("Missing API key.");
             return;
         }
@@ -79,7 +98,7 @@ public class AiQuizActivity extends AppCompatActivity {
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("model", "mistralai/mistral-7b-instruct");
-            // 💬 ככה OpenRouter רוצה
+
             JSONArray messages = new JSONArray();
             JSONObject message = new JSONObject();
             message.put("role", "user");
@@ -93,11 +112,11 @@ public class AiQuizActivity extends AppCompatActivity {
         }
 
         Request request = new Request.Builder()
-                .url("https://openrouter.ai/api/v1/chat/completions")  // 💬 כתובת של OpenRouter
+                .url("https://openrouter.ai/api/v1/chat/completions")
                 .addHeader("Authorization", "Bearer " + apiKey)
                 .addHeader("Content-Type", "application/json")
-                .addHeader("HTTP-Referer", "https://brainwashwords.com")  // 💬 חייב לשים משהו, אפשר דומיין פיקטיבי
-                .addHeader("X-Title", "BrainWashWords App") // 💬 לא חובה, אבל נחמד
+                .addHeader("HTTP-Referer", "https://brainwashwords.com")
+                .addHeader("X-Title", "BrainWashWords App")
                 .post(RequestBody.create(jsonBody.toString(), MediaType.parse("application/json")))
                 .build();
 
@@ -106,7 +125,7 @@ public class AiQuizActivity extends AppCompatActivity {
             public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> {
                     aiSentenceText.setText("Failed to connect to AI.");
-                    Toast.makeText(AiQuizActivity.this, "❌ Network error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AiQuizActivity.this, "\u274c Network error", Toast.LENGTH_SHORT).show();
                     isWaitingForResponse = false;
                     nextQuestionButton.setEnabled(true);
                 });
@@ -124,8 +143,7 @@ public class AiQuizActivity extends AppCompatActivity {
 
                     if (!response.isSuccessful()) {
                         aiSentenceText.setText("Error: " + response.code());
-                        Toast.makeText(AiQuizActivity.this, "❌ AI server error: " + response.code(), Toast.LENGTH_SHORT).show();
-                        Log.e("AI_ERROR", response.code() + ": " + response.message());
+                        Toast.makeText(AiQuizActivity.this, "\u274c AI server error: " + response.code(), Toast.LENGTH_SHORT).show();
                         return;
                     }
 
@@ -140,6 +158,11 @@ public class AiQuizActivity extends AppCompatActivity {
                             String question = parts[0].trim();
                             correctAnswer = parts[1].trim();
                             aiSentenceText.setText(question);
+
+                            if (isTestMode) {
+                                startCountdownTimer();
+                            }
+
                         } else {
                             aiSentenceText.setText("Invalid AI response.");
                         }
@@ -152,13 +175,45 @@ public class AiQuizActivity extends AppCompatActivity {
         });
     }
 
+    private void startCountdownTimer() {
+        timerText.setVisibility(View.VISIBLE);
+        timerText.setText("Time left: 15");
+
+        countDownTimer = new CountDownTimer(15000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                timerText.setText("Time left: " + millisUntilFinished / 1000);
+            }
+
+            public void onFinish() {
+                String userAnswer = userInput.getText().toString().trim();
+                if (userAnswer.isEmpty()) {
+                    resultText.setText("\u274c Time's up! The correct answer was: " + correctAnswer);
+                    resultText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
+                    resultText.setVisibility(View.VISIBLE);
+
+                    new android.os.Handler().postDelayed(() -> loadNewQuestion(), 2000);
+                }
+            }
+        }.start();
+    }
+
     private void checkAnswer() {
         String userAnswer = userInput.getText().toString().trim();
+
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+
+        if (!isTestMode) {
+            Toast.makeText(this, "Practice Mode: Answer not checked", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         if (userAnswer.equalsIgnoreCase(correctAnswer)) {
-            resultText.setText("✔️ Correct!");
+            resultText.setText("\u2714\ufe0f Correct!");
             resultText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         } else {
-            resultText.setText("❌ Incorrect. The missing word was: " + correctAnswer);
+            resultText.setText("\u274c Incorrect. The missing word was: " + correctAnswer);
             resultText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
         }
         resultText.setVisibility(View.VISIBLE);

@@ -2,10 +2,12 @@ package com.example.brainwashwords;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,9 +35,10 @@ import okhttp3.Response;
 
 public class FillInBlankActivity extends AppCompatActivity {
 
-    private TextView sentenceText;
+    private TextView sentenceText, timerText;
     private EditText userInput;
     private Button submitBtn;
+    private Switch modeSwitch;
 
     private FirebaseFirestore db;
     private List<Word> wordList = new ArrayList<>();
@@ -45,9 +48,11 @@ public class FillInBlankActivity extends AppCompatActivity {
     private int totalQuestions = 0;
     private static final int MAX_QUESTIONS = 10;
 
-    private final String apiKey = "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"; // 💬 תכניס כאן את מפתח OpenRouter שלך
+    private final String apiKey = "YOUR_API_KEY_HERE";
 
     private boolean isWaitingForResponse = false;
+    private boolean isTestMode = false;
+    private CountDownTimer countDownTimer;
 
     private String workoutName;
 
@@ -59,6 +64,8 @@ public class FillInBlankActivity extends AppCompatActivity {
         sentenceText = findViewById(R.id.sentenceText);
         userInput = findViewById(R.id.editAnswer);
         submitBtn = findViewById(R.id.btnSubmit);
+        modeSwitch = findViewById(R.id.modeSwitch);
+        timerText = findViewById(R.id.timerText);
 
         db = FirebaseFirestore.getInstance();
 
@@ -67,9 +74,21 @@ public class FillInBlankActivity extends AppCompatActivity {
             workoutName = "workout1";
         }
 
+        modeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            isTestMode = isChecked;
+            timerText.setVisibility(isTestMode ? View.VISIBLE : View.GONE);
+            Toast.makeText(this,
+                    isTestMode ? "Test Mode Activated" : "Practice Mode Activated",
+                    Toast.LENGTH_SHORT).show();
+        });
+
         loadWords(workoutName);
 
-        submitBtn.setOnClickListener(v -> checkAnswer());
+        submitBtn.setOnClickListener(v -> {
+            if (countDownTimer != null) countDownTimer.cancel();
+            timerText.setVisibility(View.GONE);
+            checkAnswer();
+        });
     }
 
     private void loadWords(String workoutName) {
@@ -102,11 +121,43 @@ public class FillInBlankActivity extends AppCompatActivity {
             return;
         }
 
+        if (countDownTimer != null) countDownTimer.cancel();
+        timerText.setVisibility(View.GONE);
+
         userInput.setText("");
         Collections.shuffle(wordList);
         currentWord = wordList.get(0);
 
         generateSentence(currentWord.getWord());
+
+        if (isTestMode) startTimer();
+    }
+
+    private void startTimer() {
+        timerText.setVisibility(View.VISIBLE);
+        timerText.setText("Time left: 15");
+
+        countDownTimer = new CountDownTimer(15000, 1000) {
+            public void onTick(long millisUntilFinished) {
+                timerText.setText("Time left: " + millisUntilFinished / 1000);
+            }
+
+            public void onFinish() {
+                String answer = userInput.getText().toString().trim();
+                if (answer.isEmpty()) {
+                    totalQuestions++;
+                    Toast.makeText(FillInBlankActivity.this,
+                            "⏱️ Time's up! The correct word was: " + currentWord.getWord(),
+                            Toast.LENGTH_SHORT).show();
+
+                    if (totalQuestions >= MAX_QUESTIONS) {
+                        showResult();
+                    } else {
+                        showNextQuestion();
+                    }
+                }
+            }
+        }.start();
     }
 
     private void generateSentence(String word) {
@@ -118,7 +169,6 @@ public class FillInBlankActivity extends AppCompatActivity {
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("model", "mistralai/mistral-7b-instruct");
-            // OpenRouter uses this model naming
             JSONArray messages = new JSONArray();
             JSONObject message = new JSONObject();
             message.put("role", "user");
@@ -135,7 +185,7 @@ public class FillInBlankActivity extends AppCompatActivity {
                 .url("https://openrouter.ai/api/v1/chat/completions")
                 .addHeader("Authorization", "Bearer " + apiKey)
                 .addHeader("Content-Type", "application/json")
-                .addHeader("HTTP-Referer", "https://brainwashwords.com") // חשוב!
+                .addHeader("HTTP-Referer", "https://brainwashwords.com")
                 .addHeader("X-Title", "BrainWashWords App")
                 .post(RequestBody.create(jsonBody.toString(), MediaType.parse("application/json")))
                 .build();
@@ -203,5 +253,13 @@ public class FillInBlankActivity extends AppCompatActivity {
         intent.putExtra("total", totalQuestions);
         startActivity(intent);
         finish();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+        }
+        super.onDestroy();
     }
 }

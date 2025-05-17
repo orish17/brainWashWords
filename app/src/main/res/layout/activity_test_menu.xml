@@ -41,4 +41,11 @@
         android:layout_height="wrap_content"
         android:text="מבחן AI 🤖"
         android:layout_marginTop="12dp" />
+
+    <Button
+        android:id="@+id/btnStt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="מבחן דיבור "
+        android:layout_marginTop="12dp" />
 </LinearLayout>
