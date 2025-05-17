@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-public class AudioTestActivity extends AppCompatActivity {
+public class AudioTestActivity extends BaseActivity {
 
     private TextToSpeech tts;
     private EditText answerInput;
@@ -50,6 +50,8 @@ public class AudioTestActivity extends AppCompatActivity {
         submitButton = findViewById(R.id.btnSubmit);
         modeSwitch = findViewById(R.id.modeSwitch);
         timerText = findViewById(R.id.timerText);
+        setupDrawer();
+
 
         db = FirebaseFirestore.getInstance();
         loadWords();

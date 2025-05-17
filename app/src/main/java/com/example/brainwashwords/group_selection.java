@@ -21,7 +21,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-public class group_selection extends AppCompatActivity { // או שם ה-Activity שלך
+public class group_selection extends  BaseActivity  { // או שם ה-Activity שלך
     private RecyclerView recyclerView;
     private GroupAdapter adapter;
     private List<Group> groupList;
@@ -37,6 +37,7 @@ public class group_selection extends AppCompatActivity { // או שם ה-Activit
         progressBar = findViewById(R.id.progressBar);
 
         groupList = new ArrayList<>();
+        setupDrawer();
 
         setupRecyclerView();
 

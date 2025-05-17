@@ -33,7 +33,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class FillInBlankActivity extends AppCompatActivity {
+public class FillInBlankActivity extends BaseActivity {
 
     private TextView sentenceText, timerText;
     private EditText userInput;
@@ -66,6 +66,7 @@ public class FillInBlankActivity extends AppCompatActivity {
         submitBtn = findViewById(R.id.btnSubmit);
         modeSwitch = findViewById(R.id.modeSwitch);
         timerText = findViewById(R.id.timerText);
+        setupDrawer();
 
         db = FirebaseFirestore.getInstance();
 

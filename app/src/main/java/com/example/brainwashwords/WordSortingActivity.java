@@ -12,7 +12,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-public class WordSortingActivity extends AppCompatActivity {
+public class WordSortingActivity extends BaseActivity {
 
     private RecyclerView recyclerView;
     private WordAdapter adapter;
@@ -30,6 +30,7 @@ public class WordSortingActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         db = FirebaseFirestore.getInstance();
+        setupDrawer();
 
         workoutName = getIntent().getStringExtra("workoutName");
         if (workoutName == null) {

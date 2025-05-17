@@ -21,7 +21,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-public class home extends AppCompatActivity {
+public class home extends BaseActivity {
 
     private AppCompatButton button, about, testYourself;
     private TextView usernameDisplay;
@@ -41,6 +41,7 @@ public class home extends AppCompatActivity {
 
         initializeViews();
         setupAlertDialog();
+        setupDrawer();
 
         username = getIntent().getStringExtra("USERNAME");
         if (username != null) {

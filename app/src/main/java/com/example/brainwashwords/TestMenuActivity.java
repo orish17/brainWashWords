@@ -11,7 +11,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
-public class TestMenuActivity extends AppCompatActivity {
+public class TestMenuActivity extends BaseActivity {
 
     Button btnMultipleChoice, btnFillInBlank, btnAudioTest, btnAiQuiz, btnStt;
     private FirebaseFirestore db;
@@ -27,6 +27,7 @@ public class TestMenuActivity extends AppCompatActivity {
         btnAudioTest = findViewById(R.id.btnAudioTest);
         btnAiQuiz = findViewById(R.id.btnAiQuiz);
         btnStt = findViewById(R.id.btnStt);
+        setupDrawer();
 
         db = FirebaseFirestore.getInstance();
 

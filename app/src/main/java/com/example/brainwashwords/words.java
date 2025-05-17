@@ -19,7 +19,7 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.List;
 
-public class words extends AppCompatActivity {
+public class words extends BaseActivity {
 
     private RecyclerView recyclerView;
     private WordAdapter wordAdapter;
@@ -36,6 +36,7 @@ public class words extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_words);
+        setupDrawer();
 
         workoutName = getIntent().getStringExtra("workoutName");
         if (workoutName == null || workoutName.isEmpty()) {

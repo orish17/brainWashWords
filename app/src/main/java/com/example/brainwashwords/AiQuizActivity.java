@@ -26,7 +26,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-public class AiQuizActivity extends AppCompatActivity {
+public class AiQuizActivity extends BaseActivity {
 
     private TextView aiSentenceText, resultText, timerText;
     private EditText userInput;
@@ -52,6 +52,8 @@ public class AiQuizActivity extends AppCompatActivity {
         nextQuestionButton = findViewById(R.id.nextQuestionButton);
         modeSwitch = findViewById(R.id.modeSwitch);
         timerText = findViewById(R.id.timerText);
+        setupDrawer();
+
 
         loadNewQuestion();
 

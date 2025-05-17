@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class MultipleChoiceActivity extends AppCompatActivity {
+public class MultipleChoiceActivity extends BaseActivity {
 
     private TextView questionText, timerText;
     private Button[] optionButtons = new Button[4];
@@ -46,6 +46,7 @@ public class MultipleChoiceActivity extends AppCompatActivity {
         optionButtons[1] = findViewById(R.id.optionB);
         optionButtons[2] = findViewById(R.id.optionC);
         optionButtons[3] = findViewById(R.id.optionD);
+        setupDrawer();
 
         db = FirebaseFirestore.getInstance();
 

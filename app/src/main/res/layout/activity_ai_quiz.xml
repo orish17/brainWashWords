@@ -1,73 +1,95 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.drawerlayout.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="20dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- 🟢 מצב מבחן / תרגול -->
-    <Switch
-        android:id="@+id/modeSwitch"
+    <LinearLayout
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <!-- ✅ Toolbar בלי טקסט -->
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
+
+        <!-- 🟢 מצב מבחן -->
+        <Switch
+            android:id="@+id/modeSwitch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Test Mode"
+            android:textSize="16sp"
+            android:textColor="@android:color/black"
+            android:padding="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="12dp"
+            android:layout_gravity="start" />
+
+        <!-- תוכן ראשי -->
+        <TextView
+            android:id="@+id/aiSentenceText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI is thinking..."
+            android:textSize="20sp"
+            android:layout_marginBottom="16dp" />
+
+        <EditText
+            android:id="@+id/userInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Your answer here" />
+
+        <Button
+            android:id="@+id/checkAnswerButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Check Answer"
+            android:layout_marginTop="16dp" />
+
+        <TextView
+            android:id="@+id/timerText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Time left: 15"
+            android:textSize="16sp"
+            android:textColor="@android:color/holo_red_dark"
+            android:layout_marginBottom="12dp"
+            android:visibility="gone"
+            android:layout_gravity="center_horizontal" />
+
+        <TextView
+            android:id="@+id/resultText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Feedback"
+            android:textSize="16sp"
+            android:textColor="@android:color/holo_green_dark"
+            android:visibility="gone"
+            android:layout_marginTop="12dp" />
+
+        <Button
+            android:id="@+id/nextQuestionButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Next Question"
+            android:layout_marginTop="20dp" />
+    </LinearLayout>
+
+    <!-- תפריט צד -->
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Test Mode"
-        android:textSize="16sp"
-        android:textColor="@android:color/black"
-        android:padding="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="12dp"
-        android:layout_gravity="start" />
-
-    <TextView
-        android:id="@+id/aiSentenceText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="AI is thinking..."
-        android:textSize="20sp"
-        android:layout_marginBottom="16dp"/>
-
-    <EditText
-        android:id="@+id/userInput"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Your answer here" />
-
-    <Button
-        android:id="@+id/checkAnswerButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Check Answer"
-        android:layout_marginTop="16dp"/>
-
-    <TextView
-        android:id="@+id/timerText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Time left: 15"
-        android:textSize="16sp"
-        android:textColor="@android:color/holo_red_dark"
-        android:layout_marginBottom="12dp"
-        android:visibility="gone"
-        android:layout_gravity="center_horizontal"/>
-
-
-    <TextView
-        android:id="@+id/resultText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Feedback"
-        android:textSize="16sp"
-        android:textColor="@android:color/holo_green_dark"
-        android:visibility="gone"
-        android:layout_marginTop="12dp"/>
-
-    <Button
-        android:id="@+id/nextQuestionButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Next Question"
-        android:layout_marginTop="20dp"/>
-
-
-</LinearLayout>
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        app:menu="@menu/drawer_menu"
+        app:headerLayout="@layout/nav_header" />
+</androidx.drawerlayout.widget.DrawerLayout>

@@ -19,7 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import java.util.ArrayList;
 import java.util.Locale;
 
-public class SpeechToTextTestActivity extends AppCompatActivity {
+public class SpeechToTextTestActivity extends BaseActivity {
 
     private TextToSpeech tts;
     private SpeechRecognizer speechRecognizer;
@@ -41,6 +41,7 @@ public class SpeechToTextTestActivity extends AppCompatActivity {
         playButton = findViewById(R.id.playButton);
         listenButton = findViewById(R.id.listenButton);
         modeSwitch = findViewById(R.id.modeSwitch);
+        setupDrawer();
 
         setupTTS();
         setupSpeechRecognizer();
