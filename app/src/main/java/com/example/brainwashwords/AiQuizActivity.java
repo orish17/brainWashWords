@@ -40,6 +40,10 @@ public class AiQuizActivity extends BaseActivity {
 
     private final String apiKey = "YOUR_API_KEY_HERE"; // החלף במפתח שלך
 
+    private int score = 0;
+    private int totalQuestions = 0;
+    private static final int MAX_QUESTIONS = 10;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -53,7 +57,6 @@ public class AiQuizActivity extends BaseActivity {
         modeSwitch = findViewById(R.id.modeSwitch);
         timerText = findViewById(R.id.timerText);
         setupDrawer();
-
 
         loadNewQuestion();
 
@@ -189,11 +192,12 @@ public class AiQuizActivity extends BaseActivity {
             public void onFinish() {
                 String userAnswer = userInput.getText().toString().trim();
                 if (userAnswer.isEmpty()) {
+                    totalQuestions++;
                     resultText.setText("\u274c Time's up! The correct answer was: " + correctAnswer);
                     resultText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
                     resultText.setVisibility(View.VISIBLE);
 
-                    new android.os.Handler().postDelayed(() -> loadNewQuestion(), 2000);
+                    checkIfEnd();
                 }
             }
         }.start();
@@ -211,13 +215,40 @@ public class AiQuizActivity extends BaseActivity {
             return;
         }
 
+        totalQuestions++;
+
         if (userAnswer.equalsIgnoreCase(correctAnswer)) {
+            score++;
             resultText.setText("\u2714\ufe0f Correct!");
             resultText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         } else {
             resultText.setText("\u274c Incorrect. The missing word was: " + correctAnswer);
             resultText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
         }
+
         resultText.setVisibility(View.VISIBLE);
+
+        checkIfEnd();
+    }
+
+    private void checkIfEnd() {
+        if (totalQuestions >= MAX_QUESTIONS) {
+            float successRate = ((float) score / totalQuestions) * 100f;
+            FirebaseUtils.saveTestResult(this, "AiTest", successRate);
+            Toast.makeText(this, "Test completed! Score: " + score + "/" + totalQuestions, Toast.LENGTH_LONG).show();
+
+            // איפוס
+            score = 0;
+            totalQuestions = 0;
+        }
+
+        // מעבר לשאלה הבאה אחרי 2 שניות
+        new android.os.Handler().postDelayed(this::loadNewQuestion, 2000);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (countDownTimer != null) countDownTimer.cancel();
+        super.onDestroy();
     }
 }

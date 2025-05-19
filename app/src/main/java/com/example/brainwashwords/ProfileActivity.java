@@ -1,23 +1,17 @@
 package com.example.brainwashwords;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
+import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.utils.ColorTemplate;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.github.mikephil.charting.charts.PieChart;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
+import com.google.firebase.database.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +21,6 @@ public class ProfileActivity extends BaseActivity {
 
     private PieChart pieChart;
     private DatabaseReference userRef;
-    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,8 +29,16 @@ public class ProfileActivity extends BaseActivity {
         setupDrawer();
 
         pieChart = findViewById(R.id.pieChart);
-        mAuth = FirebaseAuth.getInstance();
-        String userId = mAuth.getCurrentUser().getUid();
+
+        // שליפת UID מה־SharedPreferences
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        String userId = prefs.getString("uid", null);
+
+        if (userId == null) {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
         userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
 
@@ -47,12 +48,14 @@ public class ProfileActivity extends BaseActivity {
                 User user = snapshot.getValue(User.class);
                 if (user != null && user.getTests() != null) {
                     loadChart(user.getTests());
+                } else {
+                    Toast.makeText(ProfileActivity.this, "No test data found", Toast.LENGTH_SHORT).show();
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(ProfileActivity.this, "Error loading chart", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ProfileActivity.this, "Error loading data", Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -65,8 +68,13 @@ public class ProfileActivity extends BaseActivity {
 
         PieDataSet dataSet = new PieDataSet(entries, "Success Rates");
         dataSet.setColors(ColorTemplate.COLORFUL_COLORS);
+
         PieData data = new PieData(dataSet);
         pieChart.setData(data);
-        pieChart.invalidate(); // מרענן את הגרף
+        pieChart.setUsePercentValues(true);
+        pieChart.getDescription().setEnabled(false);
+        pieChart.setCenterText("Test Success");
+        pieChart.setDrawHoleEnabled(true);
+        pieChart.invalidate(); // רענון הגרף
     }
 }

@@ -178,6 +178,13 @@ public class MultipleChoiceActivity extends BaseActivity {
     }
 
     private void showResult() {
+        // חישוב ציון
+        float successRate = ((float) score / totalQuestions) * 100f;
+
+        // שמירה אוטומטית ב-Firebase
+        FirebaseUtils.saveTestResult(this, "MultipleChoice", successRate);
+
+        // מעבר למסך תוצאה
         Intent intent = new Intent(this, QuizResultActivity.class);
         intent.putExtra("score", score);
         intent.putExtra("total", totalQuestions);
