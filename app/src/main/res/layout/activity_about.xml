@@ -1,10 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".about">
+    android:id="@+id/drawer_layout">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/reg">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:gravity="center_horizontal">
+
+            <!-- כותרת -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="About Us"
+                android:textColor="@color/white"
+                android:textSize="26sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp" />
+
+            <!-- תוכן -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="BrainWashWords is an educational app designed to help users expand their English vocabulary using interactive quizzes and AI-based features. Our goal is to make learning fun, intuitive, and effective."
+                android:textColor="@color/white"
+                android:textSize="16sp"
+                android:lineSpacingExtra="6dp"
+                android:layout_marginBottom="24dp" />
+
+            <!-- יוצרי האפליקציה -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Created by: Ori &amp; Booster"
+                android:textColor="@color/niceYellow"
+                android:textSize="16sp"
+                android:layout_marginBottom="32dp" />
+
+            <ImageView
+                android:layout_width="300dp"
+                android:layout_height="250dp"
+                android:src="@drawable/brain"
+                android:contentDescription="Logo" />
+
+            <!-- צור קשר -->
+            <TextView
+                android:id="@+id/tv_contact"
+                android:text="Contact Us"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:layout_marginBottom="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <!-- אייקונים -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginBottom="24dp">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/google"
+                    android:layout_margin="8dp"
+                    android:contentDescription="Google" />
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/facebook"
+                    android:layout_margin="8dp"
+                    android:contentDescription="Facebook" />
+
+                <ImageView
+                    android:layout_width="55dp"
+                    android:layout_height="55dp"
+                    android:src="@drawable/instegram_logo"
+                    android:layout_margin="8dp"
+                    android:contentDescription="Instagram" />
+            </LinearLayout>
+
+            <!-- לוגו -->
+
+        </LinearLayout>
+    </ScrollView>
+
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nav_view"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        app:menu="@menu/drawer_menu"
+        app:headerLayout="@layout/nav_header" />
+</androidx.drawerlayout.widget.DrawerLayout>
