@@ -2,6 +2,11 @@ package com.example.brainwashwords;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -11,7 +16,13 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.utils.ColorTemplate;
-import com.google.firebase.database.*;
+import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.LegendEntry;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +30,11 @@ import java.util.Map;
 
 public class ProfileActivity extends BaseActivity {
 
+    private TextView usernameText, successRateText, motivationText;
+    private Spinner testSelector;
     private PieChart pieChart;
     private DatabaseReference userRef;
+    private Map<String, TestResult> tests;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,9 +42,12 @@ public class ProfileActivity extends BaseActivity {
         setContentView(R.layout.activity_profile);
         setupDrawer();
 
+        usernameText = findViewById(R.id.usernameText);
+        successRateText = findViewById(R.id.successRateText);
+        motivationText = findViewById(R.id.motivationText);
+        testSelector = findViewById(R.id.testSelector);
         pieChart = findViewById(R.id.pieChart);
 
-        // שליפת UID מה־SharedPreferences
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String userId = prefs.getString("uid", null);
 
@@ -46,35 +63,73 @@ public class ProfileActivity extends BaseActivity {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 User user = snapshot.getValue(User.class);
-                if (user != null && user.getTests() != null) {
-                    loadChart(user.getTests());
-                } else {
-                    Toast.makeText(ProfileActivity.this, "No test data found", Toast.LENGTH_SHORT).show();
+                if (user != null) {
+                    usernameText.setText("Hi, " + user.getEmail());
+                    if (user.getTests() != null) {
+                        tests = user.getTests();
+                        setupTestSelector();
+                    }
                 }
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                Toast.makeText(ProfileActivity.this, "Error loading data", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ProfileActivity.this, "Error loading profile", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void loadChart(Map<String, TestResult> tests) {
-        List<PieEntry> entries = new ArrayList<>();
-        for (Map.Entry<String, TestResult> entry : tests.entrySet()) {
-            entries.add(new PieEntry(entry.getValue().getSuccessRate(), entry.getKey()));
-        }
+    private void setupTestSelector() {
+        List<String> testNames = new ArrayList<>(tests.keySet());
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, testNames);
+        testSelector.setAdapter(adapter);
 
-        PieDataSet dataSet = new PieDataSet(entries, "Success Rates");
+        testSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                String selectedTest = testNames.get(position);
+                TestResult result = tests.get(selectedTest);
+                if (result != null) {
+                    updateChart(selectedTest, result.getSuccessRate());
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+    }
+
+    private void updateChart(String testName, float successRate) {
+        successRateText.setText("Success Rate: " + (int) successRate + "%");
+
+        List<PieEntry> entries = new ArrayList<>();
+        entries.add(new PieEntry(successRate, "Correct"));
+        entries.add(new PieEntry(100 - successRate, "Incorrect"));
+
+        PieDataSet dataSet = new PieDataSet(entries, "");
         dataSet.setColors(ColorTemplate.COLORFUL_COLORS);
 
         PieData data = new PieData(dataSet);
+        data.setValueTextSize(18f);
+
         pieChart.setData(data);
         pieChart.setUsePercentValues(true);
         pieChart.getDescription().setEnabled(false);
-        pieChart.setCenterText("Test Success");
+        pieChart.setCenterText(testName);
+        pieChart.setCenterTextSize(20f);
         pieChart.setDrawHoleEnabled(true);
-        pieChart.invalidate(); // רענון הגרף
+
+        Legend legend = pieChart.getLegend();
+        legend.setTextSize(16f);
+        legend.setXEntrySpace(24f); // מוסיף רווח בין הפריטים
+
+        pieChart.invalidate();
+
+        if (successRate >= 80)
+            motivationText.setText("🔥 Awesome!");
+        else if (successRate >= 50)
+            motivationText.setText("💪 Keep practicing!");
+        else
+            motivationText.setText("📘 Don’t give up!");
     }
 }

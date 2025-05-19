@@ -8,7 +8,10 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -17,6 +20,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class login extends AppCompatActivity {
     ImageButton imageButton;
+    TextView devBypass;
     Button button5;
     EditText Email, Password, Name;
     private DatabaseReference usersRef;
@@ -24,7 +28,25 @@ public class login extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_login);
+        TextView devBypass = findViewById(R.id.devBypass);
+        final int[] tapCount = {0};
+
+        devBypass.setOnClickListener(v -> {
+            tapCount[0]++;
+            if (tapCount[0] >= 5) {
+                FirebaseAuth.getInstance().signInAnonymously()
+                        .addOnSuccessListener(authResult -> {
+                            Toast.makeText(this, "Dev login successful", Toast.LENGTH_SHORT).show();
+                            startActivity(new Intent(this, home.class));
+                            finish();
+                        })
+                        .addOnFailureListener(e ->
+                                Toast.makeText(this, "Dev login failed", Toast.LENGTH_SHORT).show());
+                tapCount[0] = 0; // אפס את הספירה
+            }
+        });
 
         button5 = findViewById(R.id.button5);
         Name = findViewById(R.id.editTextTextPersonName);

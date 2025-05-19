@@ -61,13 +61,18 @@
                 android:textColor="@color/niceYellow"
                 android:layout_gravity="center"
                 android:layout_marginTop="12dp" />
+
+            <Spinner
+                android:id="@+id/testSelector"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp" />
+
             <com.github.mikephil.charting.charts.PieChart
                 android:id="@+id/pieChart"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:layout_marginTop="24dp"
-                />
-
+                android:layout_height="340dp"
+                android:layout_marginTop="24dp" />
 
         </LinearLayout>
     </ScrollView>
