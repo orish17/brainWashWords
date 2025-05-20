@@ -5,12 +5,13 @@ import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.AppCompatButton;
 
 import com.google.firebase.database.DataSnapshot;
@@ -23,13 +24,17 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 public class home extends BaseActivity {
 
-    private AppCompatButton button, about, testYourself;
+    private AppCompatButton button, testYourself;
     private TextView usernameDisplay;
     private DatabaseReference usersRef;
     private FirebaseFirestore firestore;
     private String username;
+
     private boolean isSorted = false;
     private AlertDialog.Builder builder;
+
+    private ProgressBar progressBar;
+    private TextView progressText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,14 +54,16 @@ public class home extends BaseActivity {
             loadUsernameFromFirebase();
         }
 
+        updateProgressBar();
         setupClickListeners();
     }
 
     private void initializeViews() {
         usernameDisplay = findViewById(R.id.usernameTextView3);
-        button = findViewById(R.id.button);
-        about = findViewById(R.id.button3);
         testYourself = findViewById(R.id.button1);
+        progressBar = findViewById(R.id.progressBar);
+        progressText = findViewById(R.id.progressText);
+        button = findViewById(R.id.button);
     }
 
     private void setupAlertDialog() {
@@ -104,7 +111,6 @@ public class home extends BaseActivity {
 
     private void setupClickListeners() {
         button.setOnClickListener(v -> startActivity(new Intent(home.this, group_selection.class)));
-        about.setOnClickListener(v -> startActivity(new Intent(home.this, about.class)));
         testYourself.setOnClickListener(v -> {
             if (!isSorted) {
                 builder.show();
@@ -123,7 +129,8 @@ public class home extends BaseActivity {
                             for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                                 User user = userSnapshot.getValue(User.class);
                                 if (user != null) {
-                                    usernameDisplay.setText("Welcome, " + user.getName());
+                                    String displayName = user.getDisplayName() != null ? user.getDisplayName() : user.getName();
+                                    usernameDisplay.setText("Welcome, " + displayName);
                                     break;
                                 }
                             }
@@ -134,6 +141,50 @@ public class home extends BaseActivity {
                     public void onCancelled(@NonNull DatabaseError error) {
                         Toast.makeText(home.this, "Error loading user data", Toast.LENGTH_SHORT).show();
                     }
+                });
+    }
+
+    private void updateProgressBar() {
+        firestore.collection("groups")
+                .get()
+                .addOnSuccessListener(groupResult -> {
+                    AtomicInteger total = new AtomicInteger(0);
+                    AtomicInteger known = new AtomicInteger(0);
+                    AtomicInteger remainingGroups = new AtomicInteger(groupResult.size());
+
+                    if (remainingGroups.get() == 0) {
+                        progressText.setText("No groups found");
+                        return;
+                    }
+
+                    for (QueryDocumentSnapshot groupDoc : groupResult) {
+                        String groupId = groupDoc.getId();
+
+                        firestore.collection("groups").document(groupId).collection("words")
+                                .get()
+                                .addOnSuccessListener(wordResult -> {
+                                    for (QueryDocumentSnapshot wordDoc : wordResult) {
+                                        Boolean isKnown = wordDoc.getBoolean("known");
+                                        total.incrementAndGet();
+                                        if (Boolean.TRUE.equals(isKnown)) {
+                                            known.incrementAndGet();
+                                        }
+                                    }
+
+                                    if (remainingGroups.decrementAndGet() == 0) {
+                                        int percent = (total.get() == 0) ? 0 : (known.get() * 100 / total.get());
+                                        progressBar.setProgress(percent);
+                                        progressText.setText("Known words: " + percent + "%");
+                                    }
+
+                                })
+                                .addOnFailureListener(e -> {
+                                    progressText.setText("Failed to load words");
+                                });
+                    }
+                })
+                .addOnFailureListener(e -> {
+                    progressText.setText("Failed to load groups");
                 });
     }
 }

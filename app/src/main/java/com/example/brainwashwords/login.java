@@ -76,7 +76,8 @@ public class login extends AppCompatActivity {
         }
 
         String userId = usersRef.push().getKey();
-        User newUser = new User(email, password, name);
+        User newUser = new User(name, email, password);
+
 
         if (userId != null) {
             usersRef.child(userId).setValue(newUser).addOnCompleteListener(task -> {

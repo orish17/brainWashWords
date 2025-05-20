@@ -12,12 +12,11 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 import com.github.mikephil.charting.charts.PieChart;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.utils.ColorTemplate;
-import com.github.mikephil.charting.components.Legend;
-import com.github.mikephil.charting.components.LegendEntry;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -64,7 +63,10 @@ public class ProfileActivity extends BaseActivity {
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 User user = snapshot.getValue(User.class);
                 if (user != null) {
-                    usernameText.setText("Hi, " + user.getEmail());
+                    // ✅ מציג את displayName אם קיים, אחרת נופל חזרה ל-name
+                    String nameToShow = user.getDisplayName() != null ? user.getDisplayName() : user.getName();
+                    usernameText.setText("Hi, " + nameToShow);
+
                     if (user.getTests() != null) {
                         tests = user.getTests();
                         setupTestSelector();
@@ -121,15 +123,15 @@ public class ProfileActivity extends BaseActivity {
 
         Legend legend = pieChart.getLegend();
         legend.setTextSize(16f);
-        legend.setXEntrySpace(24f); // מוסיף רווח בין הפריטים
+        legend.setXEntrySpace(24f);
 
         pieChart.invalidate();
 
         if (successRate >= 80)
-            motivationText.setText("🔥 Awesome!");
+            motivationText.setText("\uD83D\uDD25 Awesome!");
         else if (successRate >= 50)
-            motivationText.setText("💪 Keep practicing!");
+            motivationText.setText("\uD83D\uDCAA Keep practicing!");
         else
-            motivationText.setText("📘 Don’t give up!");
+            motivationText.setText("\uD83D\uDCDA Don’t give up!");
     }
 }

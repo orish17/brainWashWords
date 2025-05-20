@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- בסיס -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="niceYellow">#E1A500</color>
-    <color name="tanAccent">#e3cdb3</color>
-    <color name="blueBlack">#111f28</color>
-    <color name="reg">#343434</color>
+
+    <!-- רקעים וכפתורים -->
+    <color name="niceYellow">#FFD835</color> <!-- צבע כפתור בולט -->
+    <color name="tanAccent">#B2EBF2</color> <!-- רקע עדין לתיבות/פרטים -->
+    <color name="reg">#E3F2FD</color> <!-- רקע כללי (לייט) -->
+    <color name="blueBlack">#0288D1</color> <!-- צבע עיקרי -->
+
+    <!-- טקסטים -->
+    <color name="textPrimary">#212121</color>
+    <color name="textSecondary">#757575</color>
+
+    <!-- נוספים -->
     <color name="purple_500">#6200EE</color>
-
-
-
-
 </resources>

@@ -13,7 +13,6 @@
         android:layout_height="match_parent"
         android:background="#343434">
 
-        <!-- 🔷 Toolbar -->
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="0dp"
@@ -24,8 +23,6 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
-
-        <!-- שאר העיצוב שלך כאן (העתקתי אותו כמו שהוא): -->
 
         <ImageView
             android:id="@+id/imageView3"
@@ -94,39 +91,33 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/button2"
-            android:layout_width="200dp"
-            android:layout_height="55dp"
-            android:layout_marginBottom="100dp"
-            android:background="@drawable/background_bts1"
-            android:enabled="false"
-            android:text="My success rate"
-            android:textColor="#AAAAAA"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@+id/button1"
+        <TextView
+            android:id="@+id/progressText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loading progress..."
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:layout_marginTop="30dp"
+            app:layout_constraintTop_toBottomOf="@id/button1"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="250dp"
+            android:layout_height="20dp"
+            android:layout_marginTop="8dp"
+            android:max="100"
+            android:progress="0"
+            app:layout_constraintTop_toBottomOf="@id/progressText"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/button3" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/button3"
-            android:layout_width="129dp"
-            android:layout_height="53dp"
-            android:background="@drawable/background_bts1"
-            android:text="About us"
-            android:textColor="#FFFFFF"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            app:layout_constraintTop_toBottomOf="@+id/button2"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            android:progressDrawable="@drawable/progress_bar" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- 🔽 תפריט צד -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
