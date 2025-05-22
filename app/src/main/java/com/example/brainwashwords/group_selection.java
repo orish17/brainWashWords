@@ -1,6 +1,7 @@
 package com.example.brainwashwords;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -9,6 +10,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -30,8 +32,11 @@ public class group_selection extends  BaseActivity  { // או שם ה-Activity �
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applySavedTheme(this);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_group_selection);
+
 
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
@@ -39,10 +44,14 @@ public class group_selection extends  BaseActivity  { // או שם ה-Activity �
         groupList = new ArrayList<>();
         setupDrawer();
 
+
+
+
         setupRecyclerView();
 
         db = FirebaseFirestore.getInstance();
         loadGroups();
+
     }
 
     private void setupRecyclerView() {

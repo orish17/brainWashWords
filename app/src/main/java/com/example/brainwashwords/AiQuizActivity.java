@@ -1,5 +1,6 @@
 package com.example.brainwashwords;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -11,6 +12,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -38,14 +40,16 @@ public class AiQuizActivity extends BaseActivity {
     private boolean isTestMode = false;
     private CountDownTimer countDownTimer;
 
-    private final String apiKey = "YOUR_API_KEY_HERE"; // החלף במפתח שלך
+    private final String apiKey = "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"; // החלף במפתח שלך
 
     private int score = 0;
     private int totalQuestions = 0;
     private static final int MAX_QUESTIONS = 10;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applySavedTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ai_quiz);
 
@@ -67,6 +71,9 @@ public class AiQuizActivity extends BaseActivity {
                     isTestMode ? "Test Mode Activated" : "Practice Mode Activated",
                     Toast.LENGTH_SHORT).show();
         });
+
+
+
 
         checkAnswerButton.setOnClickListener(v -> checkAnswer());
 

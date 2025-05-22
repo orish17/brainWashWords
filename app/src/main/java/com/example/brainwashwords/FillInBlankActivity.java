@@ -1,6 +1,7 @@
 package com.example.brainwashwords;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
@@ -12,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatDelegate;
 
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
@@ -48,7 +50,7 @@ public class FillInBlankActivity extends BaseActivity {
     private int totalQuestions = 0;
     private static final int MAX_QUESTIONS = 10;
 
-    private final String apiKey = "YOUR_API_KEY_HERE";
+    private final String apiKey = "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";
 
     private boolean isWaitingForResponse = false;
     private boolean isTestMode = false;
@@ -58,6 +60,8 @@ public class FillInBlankActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applySavedTheme(this);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fill_in_blank);
 
@@ -69,6 +73,9 @@ public class FillInBlankActivity extends BaseActivity {
         setupDrawer();
 
         db = FirebaseFirestore.getInstance();
+
+
+
 
         workoutName = getIntent().getStringExtra("workoutName");
         if (workoutName == null) {

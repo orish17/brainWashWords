@@ -10,6 +10,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatDelegate;
 
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Legend;
@@ -37,18 +38,15 @@ public class ProfileActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applySavedTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_profile);
         setupDrawer();
 
-        usernameText = findViewById(R.id.usernameText);
-        successRateText = findViewById(R.id.successRateText);
-        motivationText = findViewById(R.id.motivationText);
-        testSelector = findViewById(R.id.testSelector);
-        pieChart = findViewById(R.id.pieChart);
-
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String userId = prefs.getString("uid", null);
+
+
 
         if (userId == null) {
             Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();

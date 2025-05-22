@@ -1,19 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- בסיס -->
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- מצב A (כהה) -->
+    <color name="reg">#343434</color> <!-- אפור כהה רקע -->
+    <color name="niceYellow">#E1A500</color> <!-- כפתורים צהובים -->
+    <color name="white">#FFFFFF</color>
+    <color name="blueBlack"></color>
 
-    <!-- רקעים וכפתורים -->
-    <color name="niceYellow">#FFD835</color> <!-- צבע כפתור בולט -->
-    <color name="tanAccent">#B2EBF2</color> <!-- רקע עדין לתיבות/פרטים -->
-    <color name="reg">#E3F2FD</color> <!-- רקע כללי (לייט) -->
-    <color name="blueBlack">#0288D1</color> <!-- צבע עיקרי -->
+        <color name="veryLightBlue">#e0f7fa</color> <!-- רקע תכלת -->
+        <color name="niceGray">#b0b0b0</color> <!-- כפתור אפור יפה -->
+        <color name="black">#000000</color>
+    </resources>
 
-    <!-- טקסטים -->
-    <color name="textPrimary">#212121</color>
-    <color name="textSecondary">#757575</color>
-
-    <!-- נוספים -->
-    <color name="purple_500">#6200EE</color>
-</resources>

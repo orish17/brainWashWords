@@ -48,7 +48,8 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
                 app:srcCompat="@drawable/balck_barbel"
-                app:tint="@color/blueBlack" />
+                android:tint="@color/blueBlack"/>
+
 
     </androidx.cardview.widget.CardView>
 

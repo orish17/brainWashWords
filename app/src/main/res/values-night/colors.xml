@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- רקעים וכפתורים -->
+    <color name="niceYellow">#FFD835</color>
+    <color name="tanAccent">#f2e6d8</color>
+    <color name="reg">#FAFAFA</color> <!-- רקע בהיר -->
+
+    <!-- צבעים נוספים -->
+    <color name="blueBlack">#0288D1</color>
+    <color name="textPrimary">#000000</color>
+    <color name="textSecondary">#757575</color>
+</resources>

@@ -2,6 +2,7 @@ package com.example.brainwashwords;
 
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -12,6 +13,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.AppCompatButton;
 
 import com.google.firebase.database.DataSnapshot;
@@ -38,8 +40,11 @@ public class home extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        ThemeHelper.applySavedTheme(this);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
+
 
         usersRef = FirebaseDatabase.getInstance().getReference("users");
         firestore = FirebaseFirestore.getInstance();
@@ -47,6 +52,7 @@ public class home extends BaseActivity {
         initializeViews();
         setupAlertDialog();
         setupDrawer();
+
 
         username = getIntent().getStringExtra("USERNAME");
         if (username != null) {
@@ -56,6 +62,7 @@ public class home extends BaseActivity {
 
         updateProgressBar();
         setupClickListeners();
+
     }
 
     private void initializeViews() {
