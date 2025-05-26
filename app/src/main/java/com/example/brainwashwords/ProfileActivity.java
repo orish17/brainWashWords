@@ -10,7 +10,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatDelegate;
 
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Legend;
@@ -43,10 +42,16 @@ public class ProfileActivity extends BaseActivity {
         setContentView(R.layout.activity_profile);
         setupDrawer();
 
+        // ✅ אתחול רכיבי UI לפי ה־IDs בקובץ activity_profile.xml
+        usernameText = findViewById(R.id.username_text);
+        successRateText = findViewById(R.id.success_rate_text);
+        motivationText = findViewById(R.id.motivation_text);
+        testSelector = findViewById(R.id.test_selector);
+        pieChart = findViewById(R.id.pie_chart);
+
+        // ✅ שליפת UID מה־SharedPreferences
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String userId = prefs.getString("uid", null);
-
-
 
         if (userId == null) {
             Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
@@ -56,12 +61,12 @@ public class ProfileActivity extends BaseActivity {
 
         userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
 
+        // ✅ שליפת הנתונים מה־Firebase והצגת הנתונים במסך
         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 User user = snapshot.getValue(User.class);
                 if (user != null) {
-                    // ✅ מציג את displayName אם קיים, אחרת נופל חזרה ל-name
                     String nameToShow = user.getDisplayName() != null ? user.getDisplayName() : user.getName();
                     usernameText.setText("Hi, " + nameToShow);
 
@@ -123,8 +128,9 @@ public class ProfileActivity extends BaseActivity {
         legend.setTextSize(16f);
         legend.setXEntrySpace(24f);
 
-        pieChart.invalidate();
+        pieChart.invalidate(); // מרענן את הגרף
 
+        // ✅ טקסט מוטיבציה לפי אחוז ההצלחה
         if (successRate >= 80)
             motivationText.setText("\uD83D\uDD25 Awesome!");
         else if (successRate >= 50)

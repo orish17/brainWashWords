@@ -4,9 +4,10 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- רקעים וכפתורים -->
-    <color name="niceYellow">#FFD835</color>
+    <color name="niceYellow">#E1A500</color>
     <color name="tanAccent">#f2e6d8</color>
-    <color name="reg">#FAFAFA</color> <!-- רקע בהיר -->
+    <color name="reg">#343434</color>
+    <!-- רקע בהיר -->
 
     <!-- צבעים נוספים -->
     <color name="blueBlack">#0288D1</color>

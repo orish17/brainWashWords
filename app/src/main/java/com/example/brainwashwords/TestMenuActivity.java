@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -19,26 +21,28 @@ public class TestMenuActivity extends BaseActivity {
     private FirebaseFirestore db;
     private int knownWordsCount = 0;
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applySavedTheme(this);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_test_menu);
-
-
+        setupDrawer();
 
         btnMultipleChoice = findViewById(R.id.btnMultipleChoice);
         btnFillInBlank = findViewById(R.id.btnFillInBlank);
         btnAudioTest = findViewById(R.id.btnAudioTest);
         btnAiQuiz = findViewById(R.id.btnAiQuiz);
         btnStt = findViewById(R.id.btnStt);
-        setupDrawer();
 
         db = FirebaseFirestore.getInstance();
 
-
         View.OnClickListener protectedClickListener = view -> {
+            // אפקט לחיצה מגניב
+            Animation anim = AnimationUtils.loadAnimation(this, R.anim.button_click_scale);
+            view.startAnimation(anim);
+
+            // בדיקת מילים מסומנות כ-known
             db.collection("groups").document("workout1").collection("words")
                     .get()
                     .addOnSuccessListener(result -> {
@@ -55,19 +59,21 @@ public class TestMenuActivity extends BaseActivity {
                         } else {
                             Class<?> activityClass = null;
 
-                            if (view.getId() == R.id.btnMultipleChoice)
+                            int viewId = view.getId();
+                            if (viewId == R.id.btnMultipleChoice)
                                 activityClass = MultipleChoiceActivity.class;
-                            else if (view.getId() == R.id.btnFillInBlank)
+                            else if (viewId == R.id.btnFillInBlank)
                                 activityClass = FillInBlankActivity.class;
-                            else if (view.getId() == R.id.btnAudioTest)
+                            else if (viewId == R.id.btnAudioTest)
                                 activityClass = AudioTestActivity.class;
-                            else if (view.getId() == R.id.btnAiQuiz)
+                            else if (viewId == R.id.btnAiQuiz)
                                 activityClass = AiQuizActivity.class;
-                            else if (view.getId() == R.id.btnStt)
+                            else if (viewId == R.id.btnStt)
                                 activityClass = SpeechToTextTestActivity.class;
 
-                            if (activityClass != null)
+                            if (activityClass != null) {
                                 startActivity(new Intent(this, activityClass));
+                            }
                         }
                     })
                     .addOnFailureListener(e ->
@@ -75,26 +81,11 @@ public class TestMenuActivity extends BaseActivity {
                     );
         };
 
-        // הגדרת מאזין לכל הכפתורים
+        // מאזינים לכל כפתור
         btnMultipleChoice.setOnClickListener(protectedClickListener);
         btnFillInBlank.setOnClickListener(protectedClickListener);
         btnAudioTest.setOnClickListener(protectedClickListener);
         btnAiQuiz.setOnClickListener(protectedClickListener);
         btnStt.setOnClickListener(protectedClickListener);
-
     }
-
-    private void checkKnownWords() {
-        db.collection("groups").document("workout1").collection("words")
-                .get()
-                .addOnSuccessListener(result -> {
-                    knownWordsCount = 0;
-                    for (QueryDocumentSnapshot doc : result) {
-                        Boolean known = doc.getBoolean("known");
-                        if (Boolean.TRUE.equals(known)) {
-                            knownWordsCount++;
-                        }
-                    }
-                });
     }
-}

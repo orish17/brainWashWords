@@ -1,43 +1,95 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="horizontal"
-    android:padding="8dp"
-    android:background="#343434">
+    android:background="#343434"
+    android:paddingVertical="12dp"
+    android:paddingHorizontal="8dp">
 
+    <!-- קווי יישור -->
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline25"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.25" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline45"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.45" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline70"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.70" />
+
+    <!-- מילה -->
     <TextView
         android:id="@+id/wordTextView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:text="Word"
-        android:textColor="@android:color/white"
+        android:text="Strawberry"
+        android:textSize="16sp"
         android:textStyle="bold"
-        android:textSize="16sp" />
+        android:textColor="@android:color/white"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/guideline25"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
+    <!-- Known checkbox -->
     <CheckBox
         android:id="@+id/wordCheckBox"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Known" />
+        android:text="Known"
+        android:textColor="@android:color/white"
+        android:gravity="center"
+        app:layout_constraintStart_toStartOf="@id/guideline25"
+        app:layout_constraintEnd_toStartOf="@id/guideline45"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
+    <!-- כפתור Definition -->
     <Button
         android:id="@+id/definitionButton"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Definition" />
+        android:text="Definition"
+        android:textAllCaps="false"
+        android:textColor="@android:color/black"
+        android:textSize="14sp"
+        android:background="@drawable/rounded_button_yellow"
+        android:minHeight="36dp"
+        android:paddingHorizontal="8dp"
+        app:layout_constraintStart_toStartOf="@id/guideline45"
+        app:layout_constraintEnd_toStartOf="@id/guideline70"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
+    <!-- כפתור Speak -->
     <Button
         android:id="@+id/speakButton"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Speak" />
-
-    <TextView
-        android:id="@+id/definition_text_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:visibility="gone"
-        android:textColor="@android:color/white"
-        android:layout_marginStart="8dp" />
-</LinearLayout>
+        android:text="Speak"
+        android:textAllCaps="false"
+        android:textColor="@android:color/black"
+        android:textSize="14sp"
+        android:background="@drawable/rounded_button_yellow"
+        android:minHeight="36dp"
+        android:paddingHorizontal="8dp"
+        app:layout_constraintStart_toStartOf="@id/guideline70"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

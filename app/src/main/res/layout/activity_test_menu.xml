@@ -4,30 +4,31 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/reg">
 
-    <!-- 🟩 התוכן הראשי של המסך כולל Toolbar -->
+    <!-- תוכן המסך -->
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <!-- 🟦 Toolbar בראש -->
+        <!-- Toolbar -->
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            android:title=""
-            android:titleTextColor="@android:color/white"
+            android:background="@color/niceYellow"
+            android:title="בחר סוג מבחן"
+            android:titleTextColor="@android:color/black"
             app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
-        <!-- 🟧 התוכן שלך -->
+        <!-- תוכן מרכזי -->
         <LinearLayout
             android:orientation="vertical"
             android:padding="24dp"
             android:gravity="center"
-            android:background="@color/white"
+            android:background="@color/reg"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
@@ -35,47 +36,44 @@
                 android:text="בחר סוג מבחן"
                 android:textSize="24sp"
                 android:textStyle="bold"
+                android:textColor="@android:color/white"
                 android:layout_marginBottom="32dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
 
+            <!-- כפתורים -->
             <Button
                 android:id="@+id/btnMultipleChoice"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                style="@style/TestMenuButton"
                 android:text="רב-ברירה" />
 
             <Button
                 android:id="@+id/btnFillInBlank"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                style="@style/TestMenuButton"
                 android:text="השלמת משפט"
                 android:layout_marginTop="12dp" />
 
             <Button
                 android:id="@+id/btnAudioTest"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                style="@style/TestMenuButton"
                 android:text="מבחן שמיעה"
                 android:layout_marginTop="12dp" />
 
             <Button
                 android:id="@+id/btnAiQuiz"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                style="@style/TestMenuButton"
                 android:text="מבחן AI 🤖"
                 android:layout_marginTop="12dp" />
 
             <Button
                 android:id="@+id/btnStt"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                style="@style/TestMenuButton"
                 android:text="מבחן דיבור"
                 android:layout_marginTop="12dp" />
         </LinearLayout>
     </LinearLayout>
 
-    <!-- 🟨 תפריט צד -->
+    <!-- תפריט צד -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
@@ -83,4 +81,5 @@
         android:layout_gravity="start"
         app:menu="@menu/drawer_menu"
         app:headerLayout="@layout/nav_header" />
+
 </androidx.drawerlayout.widget.DrawerLayout>
