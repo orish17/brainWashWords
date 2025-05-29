@@ -15,8 +15,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.firestore.FirebaseFirestore;
-
 import java.util.List;
 import java.util.Locale;
 
@@ -26,33 +24,22 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
         void onDefinitionClicked(String translation);
     }
 
+    public interface OnCheckboxChangedListener {
+        void onCheckboxChanged(Word word, boolean isChecked);
+    }
+
     private List<Word> wordList;
-    private FirebaseFirestore db;
     private TextToSpeech tts;
     private boolean isTtsReady = false;
-    private OnDefinitionClickListener callback;
+    private OnDefinitionClickListener definitionCallback;
+    private OnCheckboxChangedListener checkboxCallback;
 
-    public WordAdapter(List<Word> wordList, FirebaseFirestore db, Context context, OnDefinitionClickListener callback) {
+    public WordAdapter(List<Word> wordList,
+                       OnDefinitionClickListener definitionCallback,
+                       OnCheckboxChangedListener checkboxCallback) {
         this.wordList = wordList;
-        this.db = db;
-        this.callback = callback;
-
-        // Initialize TextToSpeech
-        this.tts = new TextToSpeech(context, status -> {
-            Log.d("TTS", "TTS onInit status: " + status);
-            if (status == TextToSpeech.SUCCESS) {
-                int result = tts.setLanguage(Locale.US);
-                Log.d("TTS", "TTS setLanguage result: " + result);
-                if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
-                    isTtsReady = true;
-                    Log.d("TTS", "TTS is ready!");
-                } else {
-                    Log.e("TTS", "Language not supported or missing data.");
-                }
-            } else {
-                Log.e("TTS", "Initialization failed.");
-            }
-        }); // <-- סוגרים פה יפה
+        this.definitionCallback = definitionCallback;
+        this.checkboxCallback = checkboxCallback;
     }
 
     @NonNull
@@ -60,6 +47,17 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
     public WordViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.activity_word_item, parent, false);
+
+        Context context = parent.getContext();
+        tts = new TextToSpeech(context, status -> {
+            if (status == TextToSpeech.SUCCESS) {
+                int result = tts.setLanguage(Locale.US);
+                isTtsReady = result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED;
+            } else {
+                Log.e("TTS", "Initialization failed.");
+            }
+        });
+
         return new WordViewHolder(view);
     }
 
@@ -70,8 +68,8 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
 
         holder.definitionButton.setOnClickListener(v -> {
             String definition = word.getDefinition();
-            if (callback != null && definition != null) {
-                callback.onDefinitionClicked(definition);
+            if (definitionCallback != null && definition != null) {
+                definitionCallback.onDefinitionClicked(definition);
             }
         });
 
@@ -90,16 +88,10 @@ public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder
         holder.wordCheckBox.setChecked(word.isKnown());
         holder.wordCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             word.setKnown(isChecked);
-            updateWordInFirestore(word);
+            if (checkboxCallback != null) {
+                checkboxCallback.onCheckboxChanged(word, isChecked);
+            }
         });
-    }
-
-    private void updateWordInFirestore(Word word) {
-        db.collection("groups")
-                .document(word.getGroupId())
-                .collection("words")
-                .document(word.getId())
-                .update("known", word.isKnown());
     }
 
     @Override

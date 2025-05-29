@@ -1,6 +1,5 @@
 package com.example.brainwashwords;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,92 +9,118 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.database.*;
+import com.google.firebase.firestore.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class words extends BaseActivity {
 
     private RecyclerView recyclerView;
     private WordAdapter wordAdapter;
     private List<Word> wordList;
-    private FirebaseFirestore db;
 
     private LinearLayout definitionContainer;
     private TextView definitionTextView;
     private Handler handler = new Handler();
 
-    private String workoutName; // משתמשים רק בזה
+    private String workoutName;
+    private String userId;
+
+    private FirebaseFirestore firestore;
+    private FirebaseDatabase realtimeDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applySavedTheme(this);
-
         super.onCreate(savedInstanceState);
-
-
         setContentView(R.layout.activity_words);
         setupDrawer();
 
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        userId = prefs.getString("uid", null);
+        if (userId == null) {
+            Toast.makeText(this, "User ID not found", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
+
         workoutName = getIntent().getStringExtra("workoutName");
         if (workoutName == null || workoutName.isEmpty()) {
-            workoutName = "workout1"; // ברירת מחדל אם אין
+            workoutName = "workout1";
         }
+
+        firestore = FirebaseFirestore.getInstance();
+        realtimeDb = FirebaseDatabase.getInstance();
 
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         wordList = new ArrayList<>();
-        db = FirebaseFirestore.getInstance();
+        wordAdapter = new WordAdapter(wordList, this::showTranslation, this::onCheckboxChanged);
+        recyclerView.setAdapter(wordAdapter);
 
         definitionContainer = findViewById(R.id.definition_container);
         definitionTextView = findViewById(R.id.definition_text_view);
 
-        wordAdapter = new WordAdapter(wordList, db, this, this::showTranslation);
-        recyclerView.setAdapter(wordAdapter);
+        loadWords();
 
-        loadWordsFromFirebase();
-
-        // כפתור סיום מיון
         Button doneButton = findViewById(R.id.btnDoneSortin);
         doneButton.setOnClickListener(v -> {
-            Toast.makeText(this, "Sorting saved! You can now take a test.", Toast.LENGTH_SHORT).show();
-            Intent intent = new Intent(this, home.class);
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
+            Toast.makeText(this, "Sorting saved!", Toast.LENGTH_SHORT).show();
             finish();
         });
     }
 
-    private void loadWordsFromFirebase() {
-        db.collection("groups").document(workoutName).collection("words")
-                .get()
-                .addOnSuccessListener(queryDocumentSnapshots -> {
-                    wordList.clear();
-                    for (QueryDocumentSnapshot document : queryDocumentSnapshots) {
-                        String wordText = document.getString("word");
-                        String definition = document.getString("definition");
-                        boolean isKnown = document.getBoolean("known") != null && document.getBoolean("known");
+    private void loadWords() {
+        CollectionReference wordsRef = firestore.collection("groups").document(workoutName).collection("words");
+        DatabaseReference knownRef = realtimeDb.getReference("users")
+                .child(userId)
+                .child("knownWords")
+                .child(workoutName); // ⬅️ נכון יותר
 
-                        if (wordText != null) {
-                            wordList.add(new Word(wordText, isKnown, definition, document.getId(), workoutName));
-                        }
-                    }
-                    wordAdapter.notifyDataSetChanged();
-                });
+        wordsRef.get().addOnSuccessListener(wordSnapshot -> {
+            knownRef.get().addOnSuccessListener(knownSnapshot -> {
+                Map<String, Boolean> knownMap = new HashMap<>();
+                for (DataSnapshot snap : knownSnapshot.getChildren()) {
+                    knownMap.put(snap.getKey(), snap.getValue(Boolean.class));
+                }
+
+                wordList.clear();
+                for (QueryDocumentSnapshot doc : wordSnapshot) {
+                    String id = doc.getId();
+                    String word = doc.getString("word");
+                    String definition = doc.getString("definition");
+                    boolean isKnown = knownMap.getOrDefault(id, false);
+
+                    wordList.add(new Word(word, isKnown, definition, id, workoutName));
+                }
+
+                wordAdapter.notifyDataSetChanged();
+            });
+        }).addOnFailureListener(e -> {
+            Toast.makeText(this, "Failed to load words", Toast.LENGTH_SHORT).show();
+        });
     }
+
+
+    private void onCheckboxChanged(Word word, boolean isChecked) {
+        DatabaseReference ref = realtimeDb.getReference("users")
+                .child(userId)
+                .child("knownWords")
+                .child(word.getGroupId()) // הקבוצה
+                .child(word.getId());     // המילה
+        ref.setValue(isChecked);
+    }
+
 
     private void showTranslation(String translation) {
         definitionTextView.setText(translation);
         definitionContainer.setVisibility(View.VISIBLE);
-        handler.removeCallbacksAndMessages(null); // ביטול תזמון קודם
+        handler.removeCallbacksAndMessages(null);
         handler.postDelayed(() -> definitionContainer.setVisibility(View.GONE), 5000);
     }
 

@@ -1,6 +1,5 @@
 package com.example.brainwashwords;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -9,18 +8,14 @@ import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.AppCompatButton;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.*;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
@@ -29,7 +24,6 @@ public class home extends BaseActivity {
     private AppCompatButton button, testYourself;
     private TextView usernameDisplay;
     private DatabaseReference usersRef;
-    private FirebaseFirestore firestore;
     private String username;
 
     private boolean isSorted = false;
@@ -37,24 +31,26 @@ public class home extends BaseActivity {
 
     private ProgressBar progressBar;
     private TextView progressText;
+    private String userId;
+    private FirebaseFirestore firestore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applySavedTheme(this);
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-
-        usersRef = FirebaseDatabase.getInstance().getReference("users");
         firestore = FirebaseFirestore.getInstance();
+        usersRef = FirebaseDatabase.getInstance().getReference("users");
+
+        SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+        userId = prefs.getString("uid", null);
+        username = prefs.getString("username", "User");
 
         initializeViews();
         setupAlertDialog();
         setupDrawer();
 
-
-        username = getIntent().getStringExtra("USERNAME");
         if (username != null) {
             usernameDisplay.setText("Welcome, " + username);
             loadUsernameFromFirebase();
@@ -62,7 +58,6 @@ public class home extends BaseActivity {
 
         updateProgressBar();
         setupClickListeners();
-
     }
 
     private void initializeViews() {
@@ -85,22 +80,26 @@ public class home extends BaseActivity {
     protected void onResume() {
         super.onResume();
         checkIfSorted();
+        updateProgressBar();
     }
 
     private void checkIfSorted() {
-        firestore.collection("groups").document("workout1").collection("words")
-                .get()
-                .addOnSuccessListener(result -> {
-                    int count = 0;
-                    for (QueryDocumentSnapshot doc : result) {
-                        Boolean known = doc.getBoolean("known");
-                        if (Boolean.TRUE.equals(known)) {
-                            count++;
-                        }
-                    }
-                    isSorted = count >= 4;
-                    updateTestButtonState(isSorted);
-                });
+        if (userId == null) return;
+
+        DatabaseReference knownRef = FirebaseDatabase.getInstance()
+                .getReference("users").child(userId).child("knownWords");
+
+        knownRef.get().addOnSuccessListener(snapshot -> {
+            int knownCount = 0;
+            for (DataSnapshot groupSnap : snapshot.getChildren()) {
+                for (DataSnapshot wordSnap : groupSnap.getChildren()) {
+                    Boolean value = wordSnap.getValue(Boolean.class);
+                    if (Boolean.TRUE.equals(value)) knownCount++;
+                }
+            }
+            isSorted = knownCount >= 4;
+            updateTestButtonState(isSorted);
+        });
     }
 
     private void updateTestButtonState(boolean enabled) {
@@ -152,46 +151,71 @@ public class home extends BaseActivity {
     }
 
     private void updateProgressBar() {
+        if (userId == null) return;
+
+        DatabaseReference knownRef = FirebaseDatabase.getInstance()
+                .getReference("users").child(userId).child("knownWords");
+
         firestore.collection("groups")
                 .get()
                 .addOnSuccessListener(groupResult -> {
-                    AtomicInteger total = new AtomicInteger(0);
-                    AtomicInteger known = new AtomicInteger(0);
-                    AtomicInteger remainingGroups = new AtomicInteger(groupResult.size());
+                    knownRef.get().addOnSuccessListener(knownSnapshot -> {
+                        AtomicInteger totalWords = new AtomicInteger();
+                        AtomicInteger knownCount = new AtomicInteger();
+                        AtomicInteger remaining = new AtomicInteger(groupResult.size());
 
-                    if (remainingGroups.get() == 0) {
-                        progressText.setText("No groups found");
-                        return;
-                    }
+                        if (groupResult.isEmpty()) {
+                            progressText.setText("No groups found");
+                            progressBar.setProgress(0);
+                            return;
+                        }
 
-                    for (QueryDocumentSnapshot groupDoc : groupResult) {
-                        String groupId = groupDoc.getId();
+                        for (QueryDocumentSnapshot groupDoc : groupResult) {
+                            String groupId = groupDoc.getId();
 
-                        firestore.collection("groups").document(groupId).collection("words")
-                                .get()
-                                .addOnSuccessListener(wordResult -> {
-                                    for (QueryDocumentSnapshot wordDoc : wordResult) {
-                                        Boolean isKnown = wordDoc.getBoolean("known");
-                                        total.incrementAndGet();
-                                        if (Boolean.TRUE.equals(isKnown)) {
-                                            known.incrementAndGet();
+                            firestore.collection("groups")
+                                    .document(groupId)
+                                    .collection("words")
+                                    .get()
+                                    .addOnSuccessListener(wordResult -> {
+                                        for (QueryDocumentSnapshot wordDoc : wordResult) {
+                                            totalWords.incrementAndGet();
+
+                                            Boolean isKnown = knownSnapshot
+                                                    .child(groupId)
+                                                    .child(wordDoc.getId())
+                                                    .getValue(Boolean.class);
+
+                                            if (Boolean.TRUE.equals(isKnown)) {
+                                                knownCount.incrementAndGet();
+                                            }
                                         }
-                                    }
 
-                                    if (remainingGroups.decrementAndGet() == 0) {
-                                        int percent = (total.get() == 0) ? 0 : (known.get() * 100 / total.get());
-                                        progressBar.setProgress(percent);
-                                        progressText.setText("Known words: " + percent + "%");
-                                    }
-
-                                })
-                                .addOnFailureListener(e -> {
-                                    progressText.setText("Failed to load words");
-                                });
-                    }
+                                        if (remaining.decrementAndGet() == 0) {
+                                            int total = totalWords.get();
+                                            int known = knownCount.get();
+                                            if (total > 0) {
+                                                int percent = (int) ((known * 100.0f) / total);
+                                                progressBar.setProgress(percent);
+                                                progressText.setText("Known words: " + percent + "%");
+                                            } else {
+                                                progressText.setText("No words found");
+                                                progressBar.setProgress(0);
+                                            }
+                                        }
+                                    })
+                                    .addOnFailureListener(e -> {
+                                        if (remaining.decrementAndGet() == 0) {
+                                            progressText.setText("Failed to load words");
+                                            progressBar.setProgress(0);
+                                        }
+                                    });
+                        }
+                    });
                 })
                 .addOnFailureListener(e -> {
-                    progressText.setText("Failed to load groups");
+                    progressText.setText("Failed to load progress");
+                    progressBar.setProgress(0);
                 });
     }
 }

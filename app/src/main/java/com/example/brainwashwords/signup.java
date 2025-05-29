@@ -12,9 +12,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class signup extends AppCompatActivity {
     ImageButton imageButton;
     EditText Name, Email, Password, RePassword;
@@ -55,42 +52,28 @@ public class signup extends AppCompatActivity {
 
         usersRef.child(userId).setValue(newUser).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                resetWordsForUser(userId, name);
+                // איפוס מילים מסומנות למשתמש חדש
+                FirebaseDatabase.getInstance()
+                        .getReference("users")
+                        .child(userId)
+                        .child("knownWords")
+                        .removeValue();
+
+                SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                prefs.edit()
+                        .putString("uid", userId)
+                        .putString("username", name)
+                        .apply();
+
+                Toast.makeText(signup.this, "Signup successful!", Toast.LENGTH_SHORT).show();
+
+                Intent intent = new Intent(signup.this, home.class);
+                intent.putExtra("USERNAME", name);
+                startActivity(intent);
+                finish();
             } else {
                 Toast.makeText(this, "Signup failed", Toast.LENGTH_SHORT).show();
             }
-        });
-    }
-
-    private void resetWordsForUser(String userId, String userName) {
-        DatabaseReference wordsRef = usersRef.child(userId).child("words");
-
-        // הכנת מילים התחלתיות
-        Map<String, Word> initialWords = new HashMap<>();
-        initialWords.put("apple", new Word("apple", false, "A fruit", "apple", "group1"));
-        initialWords.put("run", new Word("run", false, "To move fast", "run", "group1"));
-        initialWords.put("book", new Word("book", false, "Something to read", "book", "group1"));
-
-        // מחיקת מילים קיימות אם יש, ואז הוספה מחדש
-        wordsRef.removeValue().addOnCompleteListener(clearTask -> {
-            wordsRef.setValue(initialWords).addOnCompleteListener(wordsTask -> {
-                if (wordsTask.isSuccessful()) {
-                    SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                    prefs.edit()
-                            .putString("uid", userId)
-                            .putString("username", userName)
-                            .apply();
-
-                    Toast.makeText(signup.this, "Signup successful!", Toast.LENGTH_SHORT).show();
-
-                    Intent intent = new Intent(signup.this, home.class);
-                    intent.putExtra("USERNAME", userName);
-                    startActivity(intent);
-                    finish();
-                } else {
-                    Toast.makeText(this, "User saved but failed to set words", Toast.LENGTH_SHORT).show();
-                }
-            });
         });
     }
 
