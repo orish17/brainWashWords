@@ -6,179 +6,196 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- תוכן ראשי -->
-    <ScrollView
+    <!-- 🟦 תוכן ראשי כולל Toolbar -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/reg">
+        android:orientation="vertical">
 
-        <LinearLayout
-            android:orientation="vertical"
+        <!-- 🟨 Toolbar -->
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="24dp"
-            android:gravity="center_horizontal">
+            android:layout_height="?attr/actionBarSize"
+            android:background="?attr/colorPrimary"
+            android:title="Settings"
+            android:titleTextColor="@android:color/white" />
 
-            <!-- כותרת -->
-            <TextView
-                android:text="Settings"
-                android:textSize="26sp"
-                android:textStyle="bold"
-                android:textColor="@color/white"
-                android:layout_marginBottom="24dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"/>
+        <!-- 🟩 תוכן גלילה -->
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/reg">
 
-            <!-- מתג סאונד -->
             <LinearLayout
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:paddingVertical="12dp">
+                android:padding="24dp"
+                android:gravity="center_horizontal">
 
+                <!-- כותרת -->
                 <TextView
-                    android:text="Sound"
+                    android:text="Settings"
+                    android:textSize="26sp"
+                    android:textStyle="bold"
                     android:textColor="@color/white"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:textSize="18sp" />
+                    android:layout_marginBottom="24dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
 
-                <Switch
-                    android:id="@+id/switch_sound"
+                <!-- מתג סאונד -->
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="12dp">
+
+                    <TextView
+                        android:text="Sound"
+                        android:textColor="@color/white"
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp" />
+
+                    <Switch
+                        android:id="@+id/switch_sound"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- מתג מצב כהה -->
+                <LinearLayout
+                    android:orientation="horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:paddingVertical="12dp">
+
+                    <TextView
+                        android:text="Dark Mode"
+                        android:textColor="@color/white"
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:textSize="18sp" />
+
+                    <Switch
+                        android:id="@+id/switch_dark_mode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+                </LinearLayout>
+
+                <!-- שינוי שם -->
+                <TextView
+                    android:text="Change Username"
+                    android:textColor="@color/white"
+                    android:textStyle="bold"
+                    android:layout_marginTop="24dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <EditText
+                    android:id="@+id/edit_username"
+                    android:hint="Enter new username"
+                    android:layout_marginTop="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:backgroundTint="@color/white"
+                    android:textColorHint="#CCFFFFFF"
+                    android:textColor="@color/white"
+                    android:padding="10dp" />
+
+                <!-- כפתור שמירה -->
+                <Button
+                    android:id="@+id/btn_save_username"
+                    android:text="Save Username"
+                    android:textColor="@color/black"
+                    android:backgroundTint="@color/niceYellow"
+                    android:layout_marginTop="12dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_button" />
+
+                <!-- כפתור התנתקות -->
+                <Button
+                    android:id="@+id/btn_logout"
+                    android:text="Log Out"
+                    android:textColor="@color/black"
+                    android:backgroundTint="@color/niceYellow"
+                    android:layout_marginTop="24dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_button" />
+
+                <!-- כפתור איפוס -->
+                <Button
+                    android:id="@+id/btn_reset_stats"
+                    android:text="Reset Progress"
+                    android:textColor="@color/black"
+                    android:backgroundTint="@color/niceYellow"
+                    android:layout_marginTop="12dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/rounded_button" />
+
+                <!-- לוגו -->
+                <ImageView
+                    android:id="@+id/img_logo"
+                    android:layout_marginTop="8dp"
+                    android:layout_width="200dp"
+                    android:layout_height="220dp"
+                    android:src="@drawable/brain"
+                    android:contentDescription="Logo" />
+
+                <!-- צור קשר -->
+                <TextView
+                    android:id="@+id/tv_contact"
+                    android:text="Contact Us"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginBottom="8dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
-            </LinearLayout>
 
-            <!-- מתג מצב כהה -->
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:paddingVertical="12dp">
-
-                <TextView
-                    android:text="Dark Mode"
-                    android:textColor="@color/white"
-                    android:layout_weight="1"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:textSize="18sp" />
-
-                <Switch
-                    android:id="@+id/switch_dark_mode"
+                <!-- אייקונים -->
+                <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:layout_marginBottom="16dp">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/google"
+                        android:layout_margin="8dp"
+                        android:contentDescription="Google" />
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/facebook"
+                        android:layout_margin="8dp"
+                        android:contentDescription="Facebook" />
+
+                    <ImageView
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:src="@drawable/instegram_logo"
+                        android:layout_margin="8dp"
+                        android:contentDescription="Instagram" />
+                </LinearLayout>
+
             </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
 
-            <!-- שינוי שם -->
-            <TextView
-                android:text="Change Username"
-                android:textColor="@color/white"
-                android:textStyle="bold"
-                android:layout_marginTop="24dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
-
-            <EditText
-                android:id="@+id/edit_username"
-                android:hint="Enter new username"
-                android:layout_marginTop="8dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/white"
-                android:textColorHint="#CCFFFFFF"
-                android:textColor="@color/white"
-                android:padding="10dp" />
-
-            <!-- כפתור שמירה -->
-            <Button
-                android:id="@+id/btn_save_username"
-                android:text="Save Username"
-                android:textColor="@color/black"
-                android:backgroundTint="@color/niceYellow"
-                android:layout_marginTop="12dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/rounded_button" />
-
-            <!-- כפתור התנתקות -->
-            <Button
-                android:id="@+id/btn_logout"
-                android:text="Log Out"
-                android:textColor="@color/black"
-                android:backgroundTint="@color/niceYellow"
-                android:layout_marginTop="24dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/rounded_button" />
-
-            <!-- כפתור איפוס -->
-            <Button
-                android:id="@+id/btn_reset_stats"
-                android:text="Reset Progress"
-                android:textColor="@color/black"
-                android:backgroundTint="@color/niceYellow"
-                android:layout_marginTop="12dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/rounded_button" />
-
-            <ImageView
-                android:id="@+id/img_logo"
-                android:layout_marginTop="8dp"
-                android:layout_width="200dp"
-                android:layout_height="220dp"
-                android:src="@drawable/brain"
-                android:contentDescription="Logo" />
-
-            <!-- כותרת צור קשר -->
-            <TextView
-                android:id="@+id/tv_contact"
-                android:text="Contact Us"
-                android:textColor="@color/white"
-                android:textSize="18sp"
-                android:layout_marginTop="24dp"
-                android:layout_marginBottom="8dp"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-
-            <!-- אייקונים -->
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:layout_marginBottom="16dp">
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/google"
-                    android:layout_margin="8dp"
-                    android:contentDescription="Google" />
-
-                <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/facebook"
-                    android:layout_margin="8dp"
-                    android:contentDescription="Facebook" />
-
-                <ImageView
-                    android:layout_width="50dp"
-                    android:layout_height="50dp"
-                    android:src="@drawable/instegram_logo"
-                    android:layout_margin="8dp"
-                    android:contentDescription="Instagram" />
-            </LinearLayout>
-
-        </LinearLayout>
-    </ScrollView>
-
-    <!-- תפריט צד -->
+    <!-- 🟥 תפריט צד -->
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
