@@ -1,8 +1,9 @@
 {
   "project_info": {
     "project_number": "494986206209",
+    "firebase_url": "https://brainwashwords-default-rtdb.firebaseio.com",
     "project_id": "brainwashwords",
-    "storage_bucket": "brainwashwords.appspot.com"
+    "storage_bucket": "brainwashwords.firebasestorage.app"
   },
   "client": [
     {
@@ -12,7 +13,20 @@
           "package_name": "com.example.brainwashwords"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "494986206209-fhqd99pbbi89ckrsu5cm5urg9m8l96jj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.brainwashwords",
+            "certificate_hash": "53617550ae6fe03658dae6bc82a1b5a832d008b5"
+          }
+        },
+        {
+          "client_id": "494986206209-75mh992ljeopuj60sdq4f5ioik4kj7cb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDrMSkplXMNdVr1gFkWEErqHpKyi7lsEhM"
@@ -20,7 +34,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "494986206209-75mh992ljeopuj60sdq4f5ioik4kj7cb.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

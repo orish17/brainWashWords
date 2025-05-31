@@ -12,6 +12,7 @@
         android:layout_height="match_parent">
 
         <LinearLayout
+            android:id="@+id/content_layout"
             android:orientation="vertical"
             android:padding="24dp"
             android:layout_width="match_parent"
@@ -73,7 +74,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="340dp"
                 android:layout_marginTop="24dp" />
-
         </LinearLayout>
     </ScrollView>
 
@@ -84,5 +84,4 @@
         android:layout_gravity="start"
         app:menu="@menu/drawer_menu"
         app:headerLayout="@layout/nav_header" />
-
 </androidx.drawerlayout.widget.DrawerLayout>

@@ -3,6 +3,7 @@ package com.example.brainwashwords;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -15,6 +16,7 @@ import com.google.firebase.database.FirebaseDatabase;
 public class signup extends AppCompatActivity {
     ImageButton imageButton;
     EditText Name, Email, Password, RePassword;
+    Button button5;
     private DatabaseReference usersRef;
 
     @Override
@@ -30,8 +32,16 @@ public class signup extends AppCompatActivity {
         Email = findViewById(R.id.editTextTextPersonName2);
         Password = findViewById(R.id.editTextTextPassword);
         RePassword = findViewById(R.id.editTextTextPassword2);
+        button5 = findViewById(R.id.button5);
 
         imageButton.setOnClickListener(v -> signUpUser());
+
+        // מעבר למסך login כשנלחץ על button5
+        button5.setOnClickListener(v -> {
+            Intent intent = new Intent(signup.this, login.class);
+            startActivity(intent);
+            finish(); // סוגר את signup כדי שלא יוכל לחזור עם back
+        });
     }
 
     private void signUpUser() {

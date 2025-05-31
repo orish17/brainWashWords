@@ -3,17 +3,21 @@ package com.example.brainwashwords;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.android.gms.auth.api.signin.*;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.*;
+import com.google.firebase.database.*;
 
 import java.util.Map;
 
@@ -23,6 +27,10 @@ public class login extends AppCompatActivity {
     Button button5;
     EditText Email, Password, Name;
     private DatabaseReference usersRef;
+
+    private static final int RC_SIGN_IN = 9001;
+    private GoogleSignInClient mGoogleSignInClient;
+    private FirebaseAuth mAuth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,6 +46,16 @@ public class login extends AppCompatActivity {
 
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         usersRef = database.getReference("users");
+        mAuth = FirebaseAuth.getInstance();
+
+        // Google Sign-In setup
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
+        mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
+
+        findViewById(R.id.button3).setOnClickListener(v -> signInWithGoogle());
 
         final int[] tapCount = {0};
         devBypass.setOnClickListener(v -> {
@@ -83,13 +101,11 @@ public class login extends AppCompatActivity {
                             SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
                             prefs.edit()
                                     .putString("uid", userSnapshot.getKey())
-                                    .putString("username", user.getName())
+                                    .putString("username", user.getName() != null ? user.getName() : "")
                                     .apply();
 
                             Toast.makeText(this, "Login successful!", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(login.this, home.class);
-                            intent.putExtra("USERNAME", user.getName());
-                            startActivity(intent);
+                            startActivity(new Intent(login.this, home.class));
                             finish();
                             break;
                         }
@@ -103,5 +119,61 @@ public class login extends AppCompatActivity {
                 Toast.makeText(this, "Database error. Please try again.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void signInWithGoogle() {
+        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            try {
+                GoogleSignInAccount account = task.getResult(ApiException.class);
+                if (account != null && account.getIdToken() != null) {
+                    firebaseAuthWithGoogle(account.getIdToken());
+                } else {
+                    Toast.makeText(this, "Google Sign-In failed: no token", Toast.LENGTH_SHORT).show();
+                    Log.e("Login", "account or token is null: " + account);
+                }
+            } catch (ApiException e) {
+                Toast.makeText(this, "Google Sign-In error", Toast.LENGTH_SHORT).show();
+                Log.e("Login", "Google sign-in error", e);
+            }
+        }
+    }
+
+
+    private void firebaseAuthWithGoogle(String idToken) {
+        if (idToken == null || idToken.length() == 0) {
+            Toast.makeText(this, "ID token is null", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener(this, task -> {
+                    if (task.isSuccessful()) {
+                        FirebaseUser user = mAuth.getCurrentUser();
+                        if (user != null) {
+                            SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                            prefs.edit()
+                                    .putString("uid", user.getUid())
+                                    .putString("username", user.getDisplayName() != null ? user.getDisplayName() : "")
+                                    .apply();
+
+                            startActivity(new Intent(login.this, home.class));
+                            finish();
+                        } else {
+                            Toast.makeText(this, "Google sign in failed: user is null", Toast.LENGTH_SHORT).show();
+                        }
+                    } else {
+                        Toast.makeText(this, "Firebase Authentication failed.", Toast.LENGTH_SHORT).show();
+                    }
+                });
     }
 }
