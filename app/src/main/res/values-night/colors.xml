@@ -10,7 +10,7 @@
     <!-- רקע בהיר -->
 
     <!-- צבעים נוספים -->
-    <color name="blueBlack">#0288D1</color>
+    <color name="blueBlack">#ff000000</color>
     <color name="textPrimary">#000000</color>
     <color name="textSecondary">#757575</color>
 </resources>

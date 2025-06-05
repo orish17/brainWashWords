@@ -50,7 +50,7 @@ public class FillInBlankActivity extends BaseActivity {
     private int totalQuestions = 0;
     private static final int MAX_QUESTIONS = 10;
 
-    private final String apiKey = "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";
+    private final String apiKey = "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";
 
     private boolean isWaitingForResponse = false;
     private boolean isTestMode = false;
