@@ -147,9 +147,14 @@ public class login extends AppCompatActivity {
      * Starts Google Sign-In flow.
      */
     private void signInWithGoogle() {
-        Intent signInIntent = mGoogleSignInClient.getSignInIntent();
-        startActivityForResult(signInIntent, RC_SIGN_IN);
+        // שלב 1: ניתוק כל חשבון קודם
+        mGoogleSignInClient.signOut().addOnCompleteListener(this, task -> {
+            // שלב 2: פתיחת חלון בחירת חשבון מחדש
+            Intent signInIntent = mGoogleSignInClient.getSignInIntent();
+            startActivityForResult(signInIntent, RC_SIGN_IN);
+        });
     }
+
 
     /**
      * Handles the result from Google Sign-In activity.

@@ -1,0 +1,106 @@
+@startuml
+
+' ==== User and TestResult ====
+class User {
+    - name: String
+    - email: String
+    - password: String
+    - displayName: String
+    - tests: Map<String, TestResult>
+}
+
+class TestResult {
+    - successRate: int
+}
+
+User --> "0..*" TestResult : has
+
+' ==== Word ====
+class Word {
+    - word: String
+    - known: boolean
+    - definition: String
+    - id: String
+    - groupId: String
+}
+
+' ==== Utils ====
+class ThemeHelper {
+    + setNightMode(Context, boolean)
+    + applySavedTheme(Context)
+}
+
+class FirebaseUtils {
+    + saveTestResult(Context, String, float)
+}
+
+ThemeHelper ..> Context
+FirebaseUtils ..> TestResult
+
+' ==== Activities ====
+class BaseActivity
+class MainActivity
+class login
+class signup
+class home
+class TestMenuActivity
+class MultipleChoiceActivity
+class FillInBlankActivity
+class AudioTestActivity
+class AiQuizActivity
+class SpeechToTextTestActivity
+class QuizResultActivity
+class SettingsActivity
+class ProfileActivity
+class about
+class group_selection
+class words
+
+' ==== ירושה מ־BaseActivity ====
+BaseActivity <|-- MainActivity
+BaseActivity <|-- home
+BaseActivity <|-- TestMenuActivity
+BaseActivity <|-- MultipleChoiceActivity
+BaseActivity <|-- FillInBlankActivity
+BaseActivity <|-- AudioTestActivity
+BaseActivity <|-- AiQuizActivity
+BaseActivity <|-- SpeechToTextTestActivity
+BaseActivity <|-- QuizResultActivity
+BaseActivity <|-- SettingsActivity
+BaseActivity <|-- ProfileActivity
+BaseActivity <|-- about
+BaseActivity <|-- group_selection
+BaseActivity <|-- words
+
+' ==== זרימה בין אקטיביטיז ====
+MainActivity --> login : opens
+MainActivity --> signup : opens
+signup --> home : redirects on success
+login --> home : redirects on success
+home --> TestMenuActivity : navigates to
+TestMenuActivity --> MultipleChoiceActivity
+TestMenuActivity --> FillInBlankActivity
+TestMenuActivity --> AudioTestActivity
+TestMenuActivity --> AiQuizActivity
+TestMenuActivity --> SpeechToTextTestActivity
+MultipleChoiceActivity --> QuizResultActivity
+FillInBlankActivity --> QuizResultActivity
+AudioTestActivity --> QuizResultActivity
+AiQuizActivity --> QuizResultActivity
+SpeechToTextTestActivity --> QuizResultActivity
+home --> ProfileActivity
+home --> SettingsActivity
+
+' ==== Data / Adapter Classes ====
+class Group
+class GroupAdapter
+class WordAdapter
+class WordSortingAdapter
+class WordViewHolder
+class workOut1
+
+WordAdapter --> Word : uses
+WordSortingAdapter --> Word : uses
+GroupAdapter --> Group : uses
+
+@enduml
