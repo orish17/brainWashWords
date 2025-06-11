@@ -126,7 +126,7 @@ public class SettingsActivity extends BaseActivity {
                 .child(userId)
                 .child("tests")
                 .removeValue()
-                .addOnSuccessListener(unused -> Toast.makeText(this, "Progress reset successfully", Toast.LENGTH_SHORT).show())
+                .addOnSuccessListener(unused -> Toast.makeText(this, "Progress reset successfully", Toast.LENGTH_SHORT).show())//
                 .addOnFailureListener(e -> Toast.makeText(this, "Failed to reset progress", Toast.LENGTH_SHORT).show());
     }
 }
