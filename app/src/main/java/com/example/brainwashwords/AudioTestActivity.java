@@ -1,28 +1,20 @@
 package com.example.brainwashwords;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.speech.tts.TextToSpeech;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
+import com.google.firebase.firestore.*;
 
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Locale;
-
+/**
+ * AudioTestActivity – מבחן שמיעה שבו מושמעת מילה והמשתמש צריך לרשום אותה.
+ * כולל מצב תרגול ומצב מבחן (עם טיימר), ניקוד, ודיווח תוצאה ל־Firebase.
+ */
 public class AudioTestActivity extends BaseActivity {
 
     private TextToSpeech tts;
@@ -42,16 +34,16 @@ public class AudioTestActivity extends BaseActivity {
     private boolean isTestMode = false;
     private CountDownTimer countDownTimer;
 
+    /**
+     * onCreate – אתחול רכיבי המסך, שליפת מילים מה־Firebase, והפעלת TTS.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applySavedTheme(this);
-
         super.onCreate(savedInstanceState);
-
-
-
         setContentView(R.layout.activity_audio_test);
 
+        // קישור רכיבי תצוגה
         answerInput = findViewById(R.id.editAnswer);
         playButton = findViewById(R.id.btnPlay);
         submitButton = findViewById(R.id.btnSubmit);
@@ -59,16 +51,17 @@ public class AudioTestActivity extends BaseActivity {
         timerText = findViewById(R.id.timerText);
         setupDrawer();
 
-
         db = FirebaseFirestore.getInstance();
         loadWords();
 
+        // אתחול TextToSpeech
         tts = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 tts.setLanguage(Locale.US);
             }
         });
 
+        // מצב מבחן או תרגול
         modeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             isTestMode = isChecked;
             timerText.setVisibility(isTestMode ? View.VISIBLE : View.GONE);
@@ -85,6 +78,9 @@ public class AudioTestActivity extends BaseActivity {
         });
     }
 
+    /**
+     * שליפת מילים מסומנות כ־known מתוך הקבוצה workout1.
+     */
     private void loadWords() {
         db.collection("groups").document("workout1").collection("words")
                 .get()
@@ -109,6 +105,9 @@ public class AudioTestActivity extends BaseActivity {
                 });
     }
 
+    /**
+     * מציג מילה חדשה להשמעה ובודק האם יש צורך להתחיל טיימר.
+     */
     private void showNextWord() {
         if (countDownTimer != null) countDownTimer.cancel();
         timerText.setVisibility(View.GONE);
@@ -121,12 +120,18 @@ public class AudioTestActivity extends BaseActivity {
         if (isTestMode) startTimer();
     }
 
+    /**
+     * משמיע את המילה הנוכחית באמצעות TextToSpeech.
+     */
     private void speakWord() {
         if (tts != null && currentWord != null) {
             tts.speak(currentWord.getWord(), TextToSpeech.QUEUE_FLUSH, null, null);
         }
     }
 
+    /**
+     * מפעיל טיימר של 10 שניות במצב מבחן.
+     */
     private void startTimer() {
         timerText.setVisibility(View.VISIBLE);
         timerText.setText("Time left: 10");
@@ -151,6 +156,9 @@ public class AudioTestActivity extends BaseActivity {
         }.start();
     }
 
+    /**
+     * בודק האם תשובת המשתמש תואמת למילה שהושמעה.
+     */
     private void checkAnswer() {
         String userAnswer = answerInput.getText().toString().trim();
         totalQuestions++;
@@ -169,14 +177,13 @@ public class AudioTestActivity extends BaseActivity {
         }
     }
 
+    /**
+     * הצגת תוצאה, שמירה ל־Firebase, ומעבר למסך סיכום.
+     */
     private void showResult() {
-        // חישוב ציון
         float successRate = ((float) score / totalQuestions) * 100f;
-
-        // שמירה אוטומטית ב-Firebase
         FirebaseUtils.saveTestResult(this, "AudioTest", successRate);
 
-        // מעבר למסך תוצאה
         Intent intent = new Intent(this, QuizResultActivity.class);
         intent.putExtra("score", score);
         intent.putExtra("total", totalQuestions);
@@ -184,7 +191,9 @@ public class AudioTestActivity extends BaseActivity {
         finish();
     }
 
-
+    /**
+     * סגירת TTS וביטול טיימר כשהמסך נהרס.
+     */
     @Override
     protected void onDestroy() {
         super.onDestroy();

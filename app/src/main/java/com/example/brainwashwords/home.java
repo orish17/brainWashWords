@@ -1,3 +1,4 @@
+
 package com.example.brainwashwords;
 
 import android.content.Intent;
@@ -19,21 +20,45 @@ import com.google.firebase.database.*;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
+/**
+ * מחלקה זו מייצגת את המסך הראשי של המשתמש לאחר התחברות.
+ * היא מציגה את שם המשתמש, את התקדמותו במיון מילים, ומאפשרת מעבר למסך מיון או מסך מבחנים.
+ * המחלקה יורשת מ-BaseActivity כדי לשלב תפריט צד.
+ */
 public class home extends BaseActivity {
 
+    /** כפתורים לפעולה */
     private AppCompatButton button, testYourself;
+
+    /** הצגת שם המשתמש */
     private TextView usernameDisplay;
+
+    /** הפניה למסד נתוני המשתמשים */
     private DatabaseReference usersRef;
+
+    /** שם המשתמש */
     private String username;
 
+    /** האם המשתמש מיין לפחות 4 מילים */
     private boolean isSorted = false;
+
+    /** תיבת דו-שיח במידה והמשתמש לא מיין */
     private AlertDialog.Builder builder;
 
+    /** פס התקדמות וכתובתו */
     private ProgressBar progressBar;
     private TextView progressText;
+
+    /** מזהה המשתמש */
     private String userId;
+
+    /** חיבור למסד נתונים של Firestore */
     private FirebaseFirestore firestore;
 
+    /**
+     * פונקציה שמופעלת בעת יצירת המסך.
+     * טוענת את ממשק המשתמש, שולפת את נתוני המשתמש, ומציגה את ההתקדמות.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applySavedTheme(this);
@@ -60,6 +85,9 @@ public class home extends BaseActivity {
         setupClickListeners();
     }
 
+    /**
+     * אתחול רכיבי המסך.
+     */
     private void initializeViews() {
         usernameDisplay = findViewById(R.id.usernameTextView3);
         testYourself = findViewById(R.id.button1);
@@ -68,6 +96,9 @@ public class home extends BaseActivity {
         button = findViewById(R.id.button);
     }
 
+    /**
+     * יצירת תיבת דו-שיח שתוצג אם המשתמש לא מיין מילים.
+     */
     private void setupAlertDialog() {
         builder = new AlertDialog.Builder(this);
         builder.setCancelable(true);
@@ -76,6 +107,9 @@ public class home extends BaseActivity {
         builder.setNegativeButton("OK, got it!", (dialog, which) -> dialog.cancel());
     }
 
+    /**
+     * כל פעם שהמסך חוזר לפעולה, נבדוק אם המשתמש כבר מיין מילים ונעדכן את פס ההתקדמות.
+     */
     @Override
     protected void onResume() {
         super.onResume();
@@ -83,6 +117,9 @@ public class home extends BaseActivity {
         updateProgressBar();
     }
 
+    /**
+     * בדיקה האם המשתמש מיין לפחות 4 מילים.
+     */
     private void checkIfSorted() {
         if (userId == null) return;
 
@@ -102,6 +139,10 @@ public class home extends BaseActivity {
         });
     }
 
+    /**
+     * הפעלת אנימציה והפעלה/כיבוי של כפתור המבחנים.
+     * @param enabled האם לאפשר את הכפתור
+     */
     private void updateTestButtonState(boolean enabled) {
         testYourself.setEnabled(enabled);
         testYourself.setTextColor(enabled ? Color.WHITE : Color.GRAY);
@@ -115,6 +156,11 @@ public class home extends BaseActivity {
         }
     }
 
+    /**
+     * מאזינים ללחיצה על כפתורים.
+     * לחיצה על "מיין" פותחת את group_selection.
+     * לחיצה על "מבחן" בודקת אם המשתמש מוכן.
+     */
     private void setupClickListeners() {
         button.setOnClickListener(v -> startActivity(new Intent(home.this, group_selection.class)));
         testYourself.setOnClickListener(v -> {
@@ -126,6 +172,9 @@ public class home extends BaseActivity {
         });
     }
 
+    /**
+     * טוען שם משתמש מעודכן ממסד הנתונים ומציג אותו.
+     */
     private void loadUsernameFromFirebase() {
         usersRef.orderByChild("name").equalTo(username)
                 .addListenerForSingleValueEvent(new ValueEventListener() {
@@ -150,6 +199,9 @@ public class home extends BaseActivity {
                 });
     }
 
+    /**
+     * חישוב והצגת אחוז המילים המסומנות כ־known לכל המשתמש.
+     */
     private void updateProgressBar() {
         if (userId == null) return;
 
@@ -219,3 +271,4 @@ public class home extends BaseActivity {
                 });
     }
 }
+

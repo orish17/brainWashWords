@@ -35,8 +35,21 @@ public class QuizResultActivity extends AppCompatActivity {
 
         resultText.setText(message);
 
+        // זיהוי סוג מבחן לצורך חזרה
+        String examType = getIntent().getStringExtra("examType");
+
         tryAgainBtn.setOnClickListener(v -> {
-            startActivity(new Intent(this, MultipleChoiceActivity.class));
+            Class<?> activityClass = MultipleChoiceActivity.class; // ברירת מחדל
+
+            if ("FillInBlank".equals(examType)) {
+                activityClass = FillInBlankActivity.class;
+            } else if ("AudioTest".equals(examType)) {
+                activityClass = AudioTestActivity.class;
+            } else if ("SpeechToText".equals(examType)) {
+                activityClass = SpeechToTextTestActivity.class;
+            }
+
+            startActivity(new Intent(this, activityClass));
             finish();
         });
 

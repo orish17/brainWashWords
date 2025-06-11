@@ -21,22 +21,30 @@ import com.google.firebase.database.*;
 
 import java.util.Map;
 
+/**
+ * Activity responsible for handling user login.
+ * Supports email/password login (custom DB),
+ * Google Sign-In (via FirebaseAuth),
+ * and dev bypass mode for quick testing.
+ */
 public class login extends AppCompatActivity {
-    ImageButton imageButton;
-    TextView devBypass;
-    Button button5;
-    EditText Email, Password, Name;
-    private DatabaseReference usersRef;
 
-    private static final int RC_SIGN_IN = 9001;
-    private GoogleSignInClient mGoogleSignInClient;
-    private FirebaseAuth mAuth;
+    ImageButton imageButton;     // כפתור התחברות רגילה
+    TextView devBypass;          // טקסט קטן ללחיצה רבתית למצב מפתח
+    Button button5;              // כפתור מעבר למסך הרשמה
+    EditText Email, Password, Name; // שדות הזנה
+    private DatabaseReference usersRef; // רפרנס למסד נתונים
+
+    private static final int RC_SIGN_IN = 9001; // קוד לזיהוי חזרת תוצאה מה-Google Sign-In
+    private GoogleSignInClient mGoogleSignInClient; // לקוח התחברות של גוגל
+    private FirebaseAuth mAuth; // Firebase Auth – לצורך התחברות עם Google
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
+        // קישור רכיבי UI מה-XML
         Email = findViewById(R.id.editTextTextPersonName2);
         Password = findViewById(R.id.editTextTextPassword);
         Name = findViewById(R.id.editTextTextPersonName);
@@ -44,19 +52,24 @@ public class login extends AppCompatActivity {
         button5 = findViewById(R.id.button5);
         devBypass = findViewById(R.id.devBypass);
 
+        // חיבור למסד הנתונים (Realtime Database)
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         usersRef = database.getReference("users");
+
+        // אתחול FirebaseAuth
         mAuth = FirebaseAuth.getInstance();
 
-        // Google Sign-In setup
+        // הגדרת התחברות עם Google
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestIdToken(getString(R.string.default_web_client_id)) // מזהה OAuth
                 .requestEmail()
                 .build();
         mGoogleSignInClient = GoogleSignIn.getClient(this, gso);
 
+        // לחיצה על כפתור התחברות עם גוגל
         findViewById(R.id.button3).setOnClickListener(v -> signInWithGoogle());
 
+        // מצב מפתחים: לאחר 5 לחיצות – דילוג ישיר למסך הבית
         final int[] tapCount = {0};
         devBypass.setOnClickListener(v -> {
             tapCount[0]++;
@@ -67,14 +80,20 @@ public class login extends AppCompatActivity {
             }
         });
 
+        // מעבר למסך הרשמה
         button5.setOnClickListener(v -> {
             Intent intent = new Intent(login.this, signup.class);
             startActivity(intent);
         });
 
+        // התחברות ידנית עם אימייל וסיסמה
         imageButton.setOnClickListener(v -> attemptLogin());
     }
 
+    /**
+     * Attempts to log in using manual email/password authentication from Realtime Database.
+     * Stores the UID and username locally upon success.
+     */
     private void attemptLogin() {
         String email = Email.getText().toString().trim();
         String password = Password.getText().toString().trim();
@@ -92,12 +111,15 @@ public class login extends AppCompatActivity {
                     Object value = userSnapshot.getValue();
                     if (value instanceof Map) {
                         User user = userSnapshot.getValue(User.class);
+
+                        // בדיקת התאמה של אימייל וסיסמה
                         if (user != null &&
                                 email.equals(user.getEmail()) &&
                                 password.equals(user.getPassword())) {
 
                             userFound = true;
 
+                            // שמירת פרטי המשתמש בזיכרון המקומי
                             SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
                             prefs.edit()
                                     .putString("uid", userSnapshot.getKey())
@@ -121,11 +143,17 @@ public class login extends AppCompatActivity {
         });
     }
 
+    /**
+     * Starts Google Sign-In flow.
+     */
     private void signInWithGoogle() {
         Intent signInIntent = mGoogleSignInClient.getSignInIntent();
         startActivityForResult(signInIntent, RC_SIGN_IN);
     }
 
+    /**
+     * Handles the result from Google Sign-In activity.
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -147,7 +175,12 @@ public class login extends AppCompatActivity {
         }
     }
 
-
+    /**
+     * Authenticates with Firebase using the Google ID token.
+     * On success, saves the user's UID and name to SharedPreferences and moves to home screen.
+     *
+     * @param idToken The Google ID token.
+     */
     private void firebaseAuthWithGoogle(String idToken) {
         if (idToken == null || idToken.length() == 0) {
             Toast.makeText(this, "ID token is null", Toast.LENGTH_SHORT).show();

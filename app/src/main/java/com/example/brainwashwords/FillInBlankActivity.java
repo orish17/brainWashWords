@@ -1,40 +1,28 @@
 package com.example.brainwashwords;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.*;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.*;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 
+/**
+ * FillInBlankActivity – פעילות המבחן שבה מוצג משפט עם מילה חסרה שהמשתמש צריך להשלים.
+ * המשפט נוצר על ידי AI (באמצעות OpenRouter), על בסיס מילה שסומנה כ־known.
+ * המבחן כולל מצב מבחן עם טיימר של 15 שניות, ניקוד, ושמירה ל־Firebase.
+ */
 public class FillInBlankActivity extends BaseActivity {
 
     private TextView sentenceText, timerText;
@@ -50,7 +38,7 @@ public class FillInBlankActivity extends BaseActivity {
     private int totalQuestions = 0;
     private static final int MAX_QUESTIONS = 10;
 
-    private final String apiKey = "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";
+    private final String apiKey = "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."; // מפתח ל־OpenRouter – יש להחליף בזה שלך
 
     private boolean isWaitingForResponse = false;
     private boolean isTestMode = false;
@@ -58,6 +46,9 @@ public class FillInBlankActivity extends BaseActivity {
 
     private String workoutName;
 
+    /**
+     * מופעל כשנוצר המסך. טוען את הקבוצה, המילים, ומאתחל UI + מאזינים.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applySavedTheme(this);
@@ -65,6 +56,7 @@ public class FillInBlankActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_fill_in_blank);
 
+        // קישור רכיבי UI
         sentenceText = findViewById(R.id.sentenceText);
         userInput = findViewById(R.id.editAnswer);
         submitBtn = findViewById(R.id.btnSubmit);
@@ -74,14 +66,11 @@ public class FillInBlankActivity extends BaseActivity {
 
         db = FirebaseFirestore.getInstance();
 
-
-
-
+        // קבלת שם הקבוצה מהמבחן
         workoutName = getIntent().getStringExtra("workoutName");
-        if (workoutName == null) {
-            workoutName = "workout1";
-        }
+        if (workoutName == null) workoutName = "workout1";
 
+        // מעבר בין מצב תרגול למבחן
         modeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             isTestMode = isChecked;
             timerText.setVisibility(isTestMode ? View.VISIBLE : View.GONE);
@@ -90,8 +79,10 @@ public class FillInBlankActivity extends BaseActivity {
                     Toast.LENGTH_SHORT).show();
         });
 
+        // שליפת מילים מהקבוצה
         loadWords(workoutName);
 
+        // לחיצה על כפתור שליחה
         submitBtn.setOnClickListener(v -> {
             if (countDownTimer != null) countDownTimer.cancel();
             timerText.setVisibility(View.GONE);
@@ -99,6 +90,9 @@ public class FillInBlankActivity extends BaseActivity {
         });
     }
 
+    /**
+     * טוען את המילים שסומנו כ־known מתוך קבוצת המילים שנבחרה.
+     */
     private void loadWords(String workoutName) {
         db.collection("groups").document(workoutName).collection("words")
                 .get()
@@ -123,6 +117,9 @@ public class FillInBlankActivity extends BaseActivity {
                 });
     }
 
+    /**
+     * מציג שאלה חדשה על סמך מילה אקראית מהרשימה.
+     */
     private void showNextQuestion() {
         if (isWaitingForResponse) {
             Toast.makeText(this, "Wait for the AI to respond...", Toast.LENGTH_SHORT).show();
@@ -141,6 +138,9 @@ public class FillInBlankActivity extends BaseActivity {
         if (isTestMode) startTimer();
     }
 
+    /**
+     * מפעיל טיימר של 15 שניות (מצב מבחן).
+     */
     private void startTimer() {
         timerText.setVisibility(View.VISIBLE);
         timerText.setText("Time left: 15");
@@ -168,12 +168,14 @@ public class FillInBlankActivity extends BaseActivity {
         }.start();
     }
 
+    /**
+     * שולח בקשה ל-AI ליצירת משפט עם מקום ריק על בסיס מילה.
+     */
     private void generateSentence(String word) {
         sentenceText.setText("AI is thinking...");
         isWaitingForResponse = true;
 
         OkHttpClient client = new OkHttpClient();
-
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("model", "mistralai/mistral-7b-instruct");
@@ -183,7 +185,6 @@ public class FillInBlankActivity extends BaseActivity {
             message.put("content", "Write an English sentence using the word '" + word + "', but replace the word with a blank (____). Respond only with the sentence.");
             messages.put(message);
             jsonBody.put("messages", messages);
-
         } catch (JSONException e) {
             runOnUiThread(() -> sentenceText.setText("Error building request."));
             return;
@@ -205,21 +206,17 @@ public class FillInBlankActivity extends BaseActivity {
                     sentenceText.setText("❌ Failed to connect to AI.");
                     isWaitingForResponse = false;
                 });
-                e.printStackTrace();
             }
 
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 isWaitingForResponse = false;
+                String resStr = response.body().string();
 
                 if (!response.isSuccessful()) {
                     runOnUiThread(() -> sentenceText.setText("❌ AI Error: " + response.code()));
-                    Log.e("AI_ERROR", response.code() + ": " + response.message());
                     return;
                 }
-
-                String resStr = response.body().string();
-                Log.d("AI_RESPONSE", resStr);
 
                 try {
                     JSONObject json = new JSONObject(resStr);
@@ -231,12 +228,14 @@ public class FillInBlankActivity extends BaseActivity {
                     runOnUiThread(() -> sentenceText.setText(content.trim()));
                 } catch (Exception e) {
                     runOnUiThread(() -> sentenceText.setText("Error parsing AI response"));
-                    Log.e("AI_PARSE_ERROR", e.getMessage());
                 }
             }
         });
     }
 
+    /**
+     * בודק אם תשובת המשתמש נכונה או לא.
+     */
     private void checkAnswer() {
         String answer = userInput.getText().toString().trim();
         totalQuestions++;
@@ -255,12 +254,14 @@ public class FillInBlankActivity extends BaseActivity {
         }
     }
 
+    /**
+     * מציג את תוצאת המבחן, שומר אותה ל־Firebase, ועובר למסך תוצאה.
+     */
     private void showResult() {
-        // חישוב ציון
         float successRate = ((float) score / totalQuestions) * 100f;
 
-        // שמירה אוטומטית ב-Firebase
-        FirebaseUtils.saveTestResult(this,"FillInBlank", successRate);
+        // שמירה ל־Firebase תחת FillInBlank
+        FirebaseUtils.saveTestResult(this, "FillInBlank", successRate);
 
         // מעבר למסך תוצאה
         Intent intent = new Intent(this, QuizResultActivity.class);
@@ -270,12 +271,12 @@ public class FillInBlankActivity extends BaseActivity {
         finish();
     }
 
-
+    /**
+     * ביטול הטיימר בעת סגירת המסך.
+     */
     @Override
     protected void onDestroy() {
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
-        }
+        if (countDownTimer != null) countDownTimer.cancel();
         super.onDestroy();
     }
 }

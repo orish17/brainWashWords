@@ -5,29 +5,21 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Switch;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.json.*;
 
 import java.io.IOException;
 
-import okhttp3.Call;
-import okhttp3.Callback;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import okhttp3.*;
 
+/**
+ * Activity that displays an AI-generated sentence with a missing word.
+ * The user must guess the missing word within a time limit (if test mode is enabled).
+ * Supports Practice and Test modes, using OpenRouter AI model.
+ */
 public class AiQuizActivity extends BaseActivity {
 
     private TextView aiSentenceText, resultText, timerText;
@@ -40,19 +32,22 @@ public class AiQuizActivity extends BaseActivity {
     private boolean isTestMode = false;
     private CountDownTimer countDownTimer;
 
-    private final String apiKey = "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"; // החלף במפתח שלך
+    private final String apiKey = "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"; // 🔐 מפתח ל־OpenRouter –
 
     private int score = 0;
     private int totalQuestions = 0;
     private static final int MAX_QUESTIONS = 10;
 
-
+    /**
+     * onCreate – מופעל בעת טעינת המסך. קושר UI, מפעיל תפריט צד ומעלה שאלה ראשונה.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         ThemeHelper.applySavedTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ai_quiz);
 
+        // קישור רכיבי UI
         aiSentenceText = findViewById(R.id.aiSentenceText);
         userInput = findViewById(R.id.userInput);
         checkAnswerButton = findViewById(R.id.checkAnswerButton);
@@ -62,8 +57,9 @@ public class AiQuizActivity extends BaseActivity {
         timerText = findViewById(R.id.timerText);
         setupDrawer();
 
-        loadNewQuestion();
+        loadNewQuestion(); // שאלה ראשונה
 
+        // מצב תרגול או מבחן (עם טיימר)
         modeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             isTestMode = isChecked;
             timerText.setVisibility(isTestMode ? View.VISIBLE : View.GONE);
@@ -72,11 +68,10 @@ public class AiQuizActivity extends BaseActivity {
                     Toast.LENGTH_SHORT).show();
         });
 
-
-
-
+        // בדיקת תשובה
         checkAnswerButton.setOnClickListener(v -> checkAnswer());
 
+        // שאלה חדשה
         nextQuestionButton.setOnClickListener(v -> {
             if (!isWaitingForResponse) {
                 loadNewQuestion();
@@ -86,18 +81,19 @@ public class AiQuizActivity extends BaseActivity {
         });
     }
 
+    /**
+     * שולף שאלה חדשה ממודל AI דרך OpenRouter.
+     */
     private void loadNewQuestion() {
         aiSentenceText.setText("AI is thinking...");
         userInput.setText("");
         resultText.setVisibility(View.GONE);
         timerText.setVisibility(View.GONE);
 
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
-        }
+        if (countDownTimer != null) countDownTimer.cancel();
 
         if (apiKey == null || apiKey.isEmpty()) {
-            Toast.makeText(this, "\u26a0\ufe0f API Key missing. Check your configuration.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "⚠️ API Key missing. Check your configuration.", Toast.LENGTH_LONG).show();
             aiSentenceText.setText("Missing API key.");
             return;
         }
@@ -105,8 +101,8 @@ public class AiQuizActivity extends BaseActivity {
         isWaitingForResponse = true;
         nextQuestionButton.setEnabled(false);
 
+        // שליחת בקשת POST למודל
         OkHttpClient client = new OkHttpClient();
-
         JSONObject jsonBody = new JSONObject();
         try {
             jsonBody.put("model", "mistralai/mistral-7b-instruct");
@@ -117,7 +113,6 @@ public class AiQuizActivity extends BaseActivity {
             message.put("content", "Create an English sentence with a missing word. Write the sentence, then in a new line write 'Missing word:' and specify the missing word.");
             messages.put(message);
             jsonBody.put("messages", messages);
-
         } catch (JSONException e) {
             e.printStackTrace();
             return;
@@ -137,7 +132,7 @@ public class AiQuizActivity extends BaseActivity {
             public void onFailure(Call call, IOException e) {
                 runOnUiThread(() -> {
                     aiSentenceText.setText("Failed to connect to AI.");
-                    Toast.makeText(AiQuizActivity.this, "\u274c Network error", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AiQuizActivity.this, "❌ Network error", Toast.LENGTH_SHORT).show();
                     isWaitingForResponse = false;
                     nextQuestionButton.setEnabled(true);
                 });
@@ -155,7 +150,7 @@ public class AiQuizActivity extends BaseActivity {
 
                     if (!response.isSuccessful()) {
                         aiSentenceText.setText("Error: " + response.code());
-                        Toast.makeText(AiQuizActivity.this, "\u274c AI server error: " + response.code(), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(AiQuizActivity.this, "❌ AI server error: " + response.code(), Toast.LENGTH_SHORT).show();
                         return;
                     }
 
@@ -171,10 +166,7 @@ public class AiQuizActivity extends BaseActivity {
                             correctAnswer = parts[1].trim();
                             aiSentenceText.setText(question);
 
-                            if (isTestMode) {
-                                startCountdownTimer();
-                            }
-
+                            if (isTestMode) startCountdownTimer();
                         } else {
                             aiSentenceText.setText("Invalid AI response.");
                         }
@@ -187,6 +179,9 @@ public class AiQuizActivity extends BaseActivity {
         });
     }
 
+    /**
+     * מפעיל טיימר של 15 שניות במצב מבחן.
+     */
     private void startCountdownTimer() {
         timerText.setVisibility(View.VISIBLE);
         timerText.setText("Time left: 15");
@@ -200,22 +195,21 @@ public class AiQuizActivity extends BaseActivity {
                 String userAnswer = userInput.getText().toString().trim();
                 if (userAnswer.isEmpty()) {
                     totalQuestions++;
-                    resultText.setText("\u274c Time's up! The correct answer was: " + correctAnswer);
+                    resultText.setText("❌ Time's up! The correct answer was: " + correctAnswer);
                     resultText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
                     resultText.setVisibility(View.VISIBLE);
-
                     checkIfEnd();
                 }
             }
         }.start();
     }
 
+    /**
+     * בודק את התשובה שהמשתמש כתב מול התשובה הנכונה.
+     */
     private void checkAnswer() {
         String userAnswer = userInput.getText().toString().trim();
-
-        if (countDownTimer != null) {
-            countDownTimer.cancel();
-        }
+        if (countDownTimer != null) countDownTimer.cancel();
 
         if (!isTestMode) {
             Toast.makeText(this, "Practice Mode: Answer not checked", Toast.LENGTH_SHORT).show();
@@ -226,33 +220,37 @@ public class AiQuizActivity extends BaseActivity {
 
         if (userAnswer.equalsIgnoreCase(correctAnswer)) {
             score++;
-            resultText.setText("\u2714\ufe0f Correct!");
+            resultText.setText("✔️ Correct!");
             resultText.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
         } else {
-            resultText.setText("\u274c Incorrect. The missing word was: " + correctAnswer);
+            resultText.setText("❌ Incorrect. The missing word was: " + correctAnswer);
             resultText.setTextColor(getResources().getColor(android.R.color.holo_red_dark));
         }
 
         resultText.setVisibility(View.VISIBLE);
-
         checkIfEnd();
     }
 
+    /**
+     * בודק אם סיימנו את מספר השאלות המקסימלי, שומר תוצאה ל־Firebase ומאפס.
+     */
     private void checkIfEnd() {
         if (totalQuestions >= MAX_QUESTIONS) {
             float successRate = ((float) score / totalQuestions) * 100f;
             FirebaseUtils.saveTestResult(this, "AiTest", successRate);
-            Toast.makeText(this, "Test completed! Score: " + score + "/" + totalQuestions, Toast.LENGTH_LONG).show();
 
-            // איפוס
+            Toast.makeText(this, "Test completed! Score: " + score + "/" + totalQuestions, Toast.LENGTH_LONG).show();
             score = 0;
             totalQuestions = 0;
         }
 
-        // מעבר לשאלה הבאה אחרי 2 שניות
+        // שאלה חדשה בעוד 2 שניות
         new android.os.Handler().postDelayed(this::loadNewQuestion, 2000);
     }
 
+    /**
+     * onDestroy – מנקה את הטיימר כדי למנוע נזילות זיכרון.
+     */
     @Override
     protected void onDestroy() {
         if (countDownTimer != null) countDownTimer.cancel();
