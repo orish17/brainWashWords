@@ -1,91 +1,86 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // הגדרת המיקום של המחלקה בפרויקט
 
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.content.SharedPreferences; // מאפשר גישה להגדרות מקומיות
+import android.os.Bundle; // אובייקט שמעביר מידע בין מסכים
+import android.view.View; // ניהול תצוגות (כפתורים, טקסטים וכו')
+import android.widget.AdapterView; // מאזין לרשימות נגללות
+import android.widget.ArrayAdapter; // מתאם לרשימות תפריט
+import android.widget.Spinner; // תפריט נפתח
+import android.widget.TextView; // תצוגת טקסט
+import android.widget.Toast; // הודעת פופ־אפ למשתמש
 
-import androidx.annotation.NonNull;
+import androidx.annotation.NonNull; // בדיקה שלא חוזר null
 
+// ספרייה להצגת גרף עוגה
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.utils.ColorTemplate;
-import com.google.firebase.database.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import com.google.firebase.database.*; // עבודה עם Firebase Realtime Database
+
+import java.util.ArrayList; // רשימה ניתנת להרחבה
+import java.util.List; // ממשק לרשימות
+import java.util.Map; // אוסף key-value
 
 /**
- * ProfileActivity is responsible for displaying user profile data,
- * including test performance statistics retrieved from Firebase Realtime Database.
- *
- * It shows:
- * - Greeting with username
- * - Dropdown menu to select test type
- * - Pie chart with success rate (correct/incorrect)
- * - Motivational message based on performance
+ * ProfileActivity מציג את פרופיל המשתמש ואת סטטיסטיקות הביצועים שלו.
+ * כולל:
+ * - הצגת שם המשתמש
+ * - תפריט בחירת סוג מבחן
+ * - גרף עוגה עם אחוז הצלחה
+ * - הודעת מוטיבציה מותאמת אישית
  */
 public class ProfileActivity extends BaseActivity {
 
-    private TextView usernameText, successRateText, motivationText;
-    private Spinner testSelector;
-    private PieChart pieChart;
-    private DatabaseReference userRef;
-    private Map<String, TestResult> tests;
+    private TextView usernameText, successRateText, motivationText; // תצוגות טקסט
+    private Spinner testSelector; // תפריט בחירת מבחן
+    private PieChart pieChart; // גרף עוגה
+    private DatabaseReference userRef; // רפרנס למשתמש ב־Firebase
+    private Map<String, TestResult> tests; // מפת מבחנים ותוצאות
 
-    /**
-     * Lifecycle method called when the activity is created.
-     * Sets up the layout, retrieves user data, and populates the UI.
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ThemeHelper.applySavedTheme(this);
+        ThemeHelper.applySavedTheme(this); // הפעלת ערכת נושא
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_profile);
-        setupDrawer(); // תפריט צד
+        setContentView(R.layout.activity_profile); // קביעת layout
+        setupDrawer(); // הפעלת תפריט צד
 
-        // אתחול רכיבי UI
+        // קישור רכיבי UI מה־XML
         usernameText = findViewById(R.id.username_text);
         successRateText = findViewById(R.id.success_rate_text);
         motivationText = findViewById(R.id.motivation_text);
         testSelector = findViewById(R.id.test_selector);
         pieChart = findViewById(R.id.pie_chart);
 
-        // שליפת UID מה־SharedPreferences (נשמר לאחר login)
+        // שליפת מזהה המשתמש מה־SharedPreferences
         SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
         String userId = prefs.getString("uid", null);
 
-        // אם לא נכנס למערכת, חזור למסך קודם
+        // אם המשתמש לא התחבר – חזרה למסך הקודם
         if (userId == null) {
             Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        // קישור לנתיב המשתמש במסד Realtime
+        // קישור למסלול של המשתמש במסד הנתונים
         userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
 
-        // שליפת נתוני המשתמש
+        // שליפת הנתונים של המשתמש
         userRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                User user = snapshot.getValue(User.class);
+                User user = snapshot.getValue(User.class); // המרת JSON למחלקה User
                 if (user != null) {
-                    // הצגת שם משתמש (אם יש displayName – השתמש בו)
+                    // הצגת שם משתמש לפי עדיפות: displayName > name
                     String nameToShow = user.getDisplayName() != null ? user.getDisplayName() : user.getName();
-                    usernameText.setText("Hi, " + nameToShow);
+                    usernameText.setText("Hi, " + nameToShow); // הצגת שם
 
-                    // בדיקה אם יש תוצאות מבחנים
                     if (user.getTests() != null) {
-                        tests = user.getTests();
+                        tests = user.getTests(); // קבלת תוצאות מבחנים
                         setupTestSelector(); // בניית תפריט לבחירת מבחן
                     }
                 }
@@ -99,71 +94,74 @@ public class ProfileActivity extends BaseActivity {
     }
 
     /**
-     * Initializes the dropdown menu (spinner) that allows the user to pick
-     * a test name and then updates the pie chart accordingly.
+     * בונה את התפריט הנפתח (spinner) לבחירת מבחן.
+     * לאחר בחירה, מוצגת תוצאה וגרף.
      */
     private void setupTestSelector() {
-        List<String> testNames = new ArrayList<>(tests.keySet());
+        List<String> testNames = new ArrayList<>(tests.keySet()); // שמות כל סוגי המבחנים
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, testNames);
-        testSelector.setAdapter(adapter);
+        testSelector.setAdapter(adapter); // חיבור המתאם ל־spinner
 
+        // מאזין לבחירה בתפריט
         testSelector.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String selectedTest = testNames.get(position);
-                TestResult result = tests.get(selectedTest);
+                String selectedTest = testNames.get(position); // שם המבחן הנבחר
+                TestResult result = tests.get(selectedTest); // שליפת תוצאה מהמפה
+
                 if (result != null) {
-                    updateChart(selectedTest, result.getSuccessRate());
+                    updateChart(selectedTest, result.getSuccessRate()); // עדכון גרף ותצוגה
                 }
             }
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                // לא נבחר כלום – אין פעולה
+                // אם המשתמש לא בחר כלום – לא מתבצע כלום
             }
         });
     }
 
     /**
-     * Updates the pie chart and success message according to the selected test.
-     * @param testName The name of the test selected.
-     * @param successRate The user's success rate for the test (0-100).
+     * עדכון הגרף וטקסטים בהתאם לתוצאה שנבחרה.
+     * @param testName שם המבחן
+     * @param successRate אחוז ההצלחה של המשתמש במבחן זה
      */
     private void updateChart(String testName, float successRate) {
-        // הצגת אחוז הצלחה מספרי
+        // הצגת אחוז הצלחה במספרים
         successRateText.setText("Success Rate: " + (int) successRate + "%");
 
-        // יצירת נתוני הגרף
+        // בניית נתונים לגרף: תשובות נכונות ושגויות
         List<PieEntry> entries = new ArrayList<>();
         entries.add(new PieEntry(successRate, "Correct"));
         entries.add(new PieEntry(100 - successRate, "Incorrect"));
 
-        PieDataSet dataSet = new PieDataSet(entries, "");
-        dataSet.setColors(ColorTemplate.COLORFUL_COLORS);
+        // הגדרת הגרף – צבעים, גודל וכו'
+        PieDataSet dataSet = new PieDataSet(entries, ""); // אין תווית כללית
+        dataSet.setColors(ColorTemplate.COLORFUL_COLORS); // צבעים שונים
 
         PieData data = new PieData(dataSet);
-        data.setValueTextSize(18f);
+        data.setValueTextSize(18f); // גודל טקסט באחוזים
 
-        // הגדרות גרף עוגה
-        pieChart.setData(data);
-        pieChart.setUsePercentValues(true);
-        pieChart.getDescription().setEnabled(false);
-        pieChart.setCenterText(testName); // שם המבחן באמצע העוגה
-        pieChart.setCenterTextSize(20f);
-        pieChart.setDrawHoleEnabled(true);
+        pieChart.setData(data); // הכנסת הנתונים לגרף
+        pieChart.setUsePercentValues(true); // הצגה באחוזים
+        pieChart.getDescription().setEnabled(false); // ביטול תיאור ברירת מחדל
+        pieChart.setCenterText(testName); // הצגת שם המבחן במרכז העוגה
+        pieChart.setCenterTextSize(20f); // גודל הטקסט המרכזי
+        pieChart.setDrawHoleEnabled(true); // חור באמצע העוגה
 
+        // עיצוב מקרא (legend)
         Legend legend = pieChart.getLegend();
         legend.setTextSize(16f);
         legend.setXEntrySpace(24f);
 
-        pieChart.invalidate(); // רענון
+        pieChart.invalidate(); // רענון הגרף
 
-        // טקסט מוטיבציוני מותאם להצלחה
+        // טקסט מוטיבציוני לפי רמת הצלחה
         if (successRate >= 80)
-            motivationText.setText("\uD83D\uDD25 Awesome!");
+            motivationText.setText("🔥 Awesome!");
         else if (successRate >= 50)
-            motivationText.setText("\uD83D\uDCAA Keep practicing!");
+            motivationText.setText("💪 Keep practicing!");
         else
-            motivationText.setText("\uD83D\uDCDA Don’t give up!");
+            motivationText.setText("📚 Don’t give up!");
     }
 }

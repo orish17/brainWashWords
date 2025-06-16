@@ -24,169 +24,117 @@ import java.util.Locale;
  */
 public class WordAdapter extends RecyclerView.Adapter<WordAdapter.WordViewHolder> {
 
-    /**
-     * Listener for when the definition button is clicked.
-     */
+    /** Listener for when the definition button is clicked. */
     public interface OnDefinitionClickListener {
-        void onDefinitionClicked(String translation);
+        void onDefinitionClicked(String translation); // מאזין להצגת פירוש
     }
 
-    /**
-     * Listener for when the checkbox (known/unknown) is changed.
-     */
+    /** Listener for when the checkbox (known/unknown) is changed. */
     public interface OnCheckboxChangedListener {
-        void onCheckboxChanged(Word word, boolean isChecked);
+        void onCheckboxChanged(Word word, boolean isChecked); // מאזין לשינוי checkbox
     }
 
-    private List<Word> wordList;
-    private TextToSpeech tts;
-    private boolean isTtsReady = false;
+    private List<Word> wordList; // רשימת המילים
+    private TextToSpeech tts; // מנוע טקסט לדיבור
+    private boolean isTtsReady = false; // דגל האם TTS מוכן
 
-    private OnDefinitionClickListener definitionCallback;
-    private OnCheckboxChangedListener checkboxCallback;
+    private OnDefinitionClickListener definitionCallback; // callback עבור פירוש
+    private OnCheckboxChangedListener checkboxCallback; // callback עבור checkbox
 
     /**
      * Constructor for WordAdapter.
-     *
-     * @param wordList           List of words to display
-     * @param definitionCallback Callback for definition click
-     * @param checkboxCallback   Callback for checkbox change
      */
     public WordAdapter(List<Word> wordList,
                        OnDefinitionClickListener definitionCallback,
                        OnCheckboxChangedListener checkboxCallback) {
-        this.wordList = wordList;
-        this.definitionCallback = definitionCallback;
-        this.checkboxCallback = checkboxCallback;
+        this.wordList = wordList; // אתחול רשימת מילים
+        this.definitionCallback = definitionCallback; // אתחול callback לפירוש
+        this.checkboxCallback = checkboxCallback; // אתחול callback ל-checkbox
     }
 
     @NonNull
     @Override
     public WordViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // יוצרים View חדש מתוך קובץ ה־XML שמייצג כל פריט ברשימת המילים
-        // המטרה: להציג עיצוב אחיד לכל מילה שנשלפת מתוך הרשימה
         View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.activity_word_item, parent, false);
+                .inflate(R.layout.activity_word_item, parent, false); // יצירת תצוגה ממבנה XML
 
-        // אתחול של מנוע Text-to-Speech כדי לאפשר למשתמש לשמוע את המילים
-        // המטרה: להפוך את חוויית הלימוד לאודיטורית ולא רק ויזואלית
-        Context context = parent.getContext();
+        Context context = parent.getContext(); // קונטקסט
         tts = new TextToSpeech(context, status -> {
             if (status == TextToSpeech.SUCCESS) {
-                // הגדרת שפת הדיבור – אנגלית אמריקאית
-                // המטרה: לוודא שהמילה תבוטא באופן נכון וברור
-                int result = tts.setLanguage(Locale.US);
-                isTtsReady = result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED;
+                int result = tts.setLanguage(Locale.US); // קביעת שפה
+                isTtsReady = result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED; // בדיקה אם השפה נתמכת
             } else {
-                // אם יש שגיאה באתחול, כותבים ללוג
-                Log.e("TTS", "Initialization failed.");
+                Log.e("TTS", "Initialization failed."); // שגיאת אתחול TTS
             }
         });
 
-        // מחזירים ViewHolder עם הרכיבים של המילה הנוכחית
-        return new WordViewHolder(view);
+        return new WordViewHolder(view); // מחזיר ViewHolder
     }
 
     @Override
     public void onBindViewHolder(@NonNull WordViewHolder holder, int position) {
-        // שולפים את האובייקט Word לפי המיקום ברשימה
-        // המטרה: לקבל את המילה שצריך להציג למשתמש
-        Word word = wordList.get(position);
+        Word word = wordList.get(position); // קבלת מילה לפי מיקום
+        holder.wordTextView.setText(word.getWord()); // הצגת המילה על המסך
 
-        // מציגים את המילה על המסך בתיבת הטקסט
-        // המטרה: שהמשתמש יראה את המילה שהוא לומד
-        holder.wordTextView.setText(word.getWord());
-
-        // כפתור "definition" – בעת לחיצה תשלח את הפירוש דרך callback
-        // המטרה: לאפשר למשתמש להבין את משמעות המילה בלחיצה
         holder.definitionButton.setOnClickListener(v -> {
-            String definition = word.getDefinition();
+            String definition = word.getDefinition(); // קבלת פירוש
             if (definitionCallback != null && definition != null) {
-                // שולחים את ההגדרה חזרה למסך הראשי להצגה
-                definitionCallback.onDefinitionClicked(definition);
+                definitionCallback.onDefinitionClicked(definition); // שליחת הפירוש לקליינט
             }
         });
 
-        // כפתור השמעה – קורא בקול את המילה בעזרת TTS
-        // המטרה: לעזור למשתמש לשמוע את ההגייה הנכונה של המילה
         holder.speakButton.setOnClickListener(v -> {
             if (!isTtsReady) {
-                // אם TTS לא מוכן – נציג הודעה מתאימה
-                Toast.makeText(holder.itemView.getContext(), "🔈 Text-to-Speech not ready", Toast.LENGTH_SHORT).show();
+                Toast.makeText(holder.itemView.getContext(), "🔈 Text-to-Speech not ready", Toast.LENGTH_SHORT).show(); // TTS לא מוכן
                 return;
             }
             if (word.getWord() != null) {
-                // הגדרת פרמטרים להשמעה – כולל עוצמת קול
                 Bundle params = new Bundle();
-                params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f);
-                // השמעת המילה
-                tts.speak(word.getWord(), TextToSpeech.QUEUE_FLUSH, params, "wordID");
+                params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1.0f); // עוצמת קול
+                tts.speak(word.getWord(), TextToSpeech.QUEUE_FLUSH, params, "wordID"); // השמעת מילה
             }
         });
 
-        // קובע אם תיבת הסימון מסומנת לפי המידע מאובייקט המילה
-        // המטרה: לשקף אם המשתמש כבר סימן את המילה כ"מוכרת"
-        holder.wordCheckBox.setChecked(word.isKnown());
+        holder.wordCheckBox.setChecked(word.isKnown()); // עדכון מצב סימון תיבה
 
-        // מאזין לשינוי ב־checkbox – מעדכן את ה־Word ושולח callback
-        // המטרה: לשמור את הבחירה של המשתמש (אם המילה מוכרת או לא)
         holder.wordCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            word.setKnown(isChecked);
+            word.setKnown(isChecked); // עדכון אובייקט המילה
             if (checkboxCallback != null) {
-                checkboxCallback.onCheckboxChanged(word, isChecked);
+                checkboxCallback.onCheckboxChanged(word, isChecked); // שליחת callback
             }
         });
     }
 
     @Override
     public int getItemCount() {
-        // מחזיר את מספר המילים ברשימה
-        // המטרה: לקבוע כמה פריטים יוצגו ב־RecyclerView
-        return wordList.size();
+        return wordList.size(); // מספר פריטים ברשימה
     }
 
     /**
      * סוגר את מנוע ה־TTS כדי לחסוך משאבים כשלא בשימוש.
-     * המטרה: מניעת דליפת זיכרון ושימוש מיותר במנוע הדיבור
      */
     public void releaseResources() {
         if (tts != null) {
-            tts.stop();      // עוצר דיבור פעיל
-            tts.shutdown();  // משחרר את המשאב לגמרי
+            tts.stop(); // עצירת דיבור
+            tts.shutdown(); // סגירת מנוע
         }
     }
 
     /**
      * ViewHolder שמחזיק את כל הרכיבים של כל פריט ברשימת המילים.
-     * המטרה: לקשר בין הקוד ל־Views במסך של כל מילה
      */
     static class WordViewHolder extends RecyclerView.ViewHolder {
-        TextView wordTextView, definitionTextView;
-        Button definitionButton, speakButton;
-        CheckBox wordCheckBox;
+        TextView wordTextView, definitionTextView; // תיבות טקסט למילה ולפירוש
+        Button definitionButton, speakButton; // כפתורים לפירוש והשמעה
+        CheckBox wordCheckBox; // תיבת סימון אם המילה מוכרת
 
-        /**
-         * מאחסן הפניות ל־Views מתוך layout של כל פריט.
-         *
-         * @param itemView התצוגה של הפריט
-         */
         public WordViewHolder(@NonNull View itemView) {
             super(itemView);
-
-            // רכיב להצגת המילה עצמה
-            wordTextView = itemView.findViewById(R.id.wordTextView);
-
-            // רכיב אופציונלי להצגת הפירוש בתחתית (אם משתמשים בו)
-            definitionTextView = itemView.findViewById(R.id.definition_text_view);
-
-            // כפתור להצגת פירוש
-            definitionButton = itemView.findViewById(R.id.definitionButton);
-
-            // כפתור להשמעת המילה בקול
-            speakButton = itemView.findViewById(R.id.speakButton);
-
-            // תיבת סימון לסימון המילה כ"מוכרת"
-            wordCheckBox = itemView.findViewById(R.id.wordCheckBox);
+            wordTextView = itemView.findViewById(R.id.wordTextView); // הצגת מילה
+            definitionTextView = itemView.findViewById(R.id.definition_text_view); // טקסט לפירוש
+            definitionButton = itemView.findViewById(R.id.definitionButton); // כפתור פירוש
+            speakButton = itemView.findViewById(R.id.speakButton); // כפתור שמיעה
+            wordCheckBox = itemView.findViewById(R.id.wordCheckBox); // checkbox
         }
     }
 }

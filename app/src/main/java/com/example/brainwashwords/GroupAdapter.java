@@ -1,65 +1,71 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // החבילה שבה נמצאת המחלקה
 
-import android.content.Intent;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
+import android.content.Intent; // מאפשר מעבר בין מסכים (Activities)
+import android.view.LayoutInflater; // מאפשר "ניפוח" קובץ XML לקוד Java
+import android.view.View; // בסיס לכל רכיב גרפי
+import android.view.ViewGroup; // קבוצה של Views – מייצגת את ההורה ברשימה
+import android.widget.TextView; // רכיב להצגת טקסט
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.annotation.NonNull; // אנוטציה למניעת שגיאות null
+import androidx.recyclerview.widget.RecyclerView; // תצוגת רשימה עם יעילות גבוהה
 
-import java.util.List;
+import java.util.List; // ממשק שמייצג רשימה של פריטים
 
 /**
- * Adapter for displaying a list of workout groups in a RecyclerView.
- * Each item represents a group of words and leads to a new screen when clicked.
+ * GroupAdapter – מתאם ל־RecyclerView שמציג קבוצות מילים.
+ * כל קבוצה מוצגת כפריט נפרד ברשימה, ובלחיצה עליה – עוברים למסך המילים שלה.
  */
 public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
 
+    // רשימת קבוצות המילים שמוצגות ברשימה
     private final List<Group> groupList;
 
     /**
-     * Constructor for the adapter.
+     * בנאי שמקבל את הרשימה של הקבוצות להצגה.
      *
-     * @param groupList A list of Group objects to be displayed.
+     * @param groupList רשימת קבוצות מסוג Group.
      */
     public GroupAdapter(List<Group> groupList) {
         this.groupList = groupList;
     }
 
     /**
-     * Inflates the layout for each item in the RecyclerView.
+     * יוצר View חדש לכל שורה ברשימה על סמך layout שנקרא recycler_view_row.
      *
-     * @param parent   The parent view group.
-     * @param viewType The type of view (not used here as we have one layout).
-     * @return A new ViewHolder for the item.
+     * @param parent   ההורה של ה-View (בד"כ RecyclerView).
+     * @param viewType סוג התצוגה (כאן יש רק סוג אחד).
+     * @return אובייקט חדש מסוג GroupViewHolder.
      */
     @NonNull
     @Override
     public GroupViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // יוצרים View חדש על בסיס layout בשם recycler_view_row
+        // ניפוח קובץ ה-XML של כל שורה והפיכתו לאובייקט View
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.recycler_view_row, parent, false);
+
+        // מחזיר אובייקט GroupViewHolder שעוטף את ה-View שנבנה
         return new GroupViewHolder(view);
     }
 
     /**
-     * Binds data from a Group object to the ViewHolder.
+     * קושר את הנתונים מהקבוצה הספציפית לתוך ה־ViewHolder.
      *
-     * @param holder   The ViewHolder to bind data to.
-     * @param position The position in the list.
+     * @param holder   אובייקט ה־ViewHolder.
+     * @param position מיקום הקבוצה ברשימה.
      */
     @Override
     public void onBindViewHolder(@NonNull GroupViewHolder holder, int position) {
-        Group currentGroup = groupList.get(position); // מקבלים את הקבוצה הנוכחית
-        holder.bind(currentGroup); // מציגים אותה ב-ViewHolder
+        // לוקחים את הקבוצה לפי המיקום
+        Group currentGroup = groupList.get(position);
+
+        // מציגים את שם הקבוצה ונותנים לה יכולת לחיצה
+        holder.bind(currentGroup);
     }
 
     /**
-     * Returns the number of items in the list.
+     * מחזיר את מספר הפריטים ברשימה (לצורך יצירת שורות).
      *
-     * @return The size of groupList.
+     * @return מספר הקבוצות ברשימה.
      */
     @Override
     public int getItemCount() {
@@ -67,36 +73,44 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
     }
 
     /**
-     * ViewHolder class to manage individual group items in the list.
+     * מחלקה פנימית שאחראית על תצוגת כל פריט (שורה אחת) ברשימה.
      */
     static class GroupViewHolder extends RecyclerView.ViewHolder {
+
+        // רכיב להצגת שם הקבוצה
         private final TextView textView;
 
         /**
-         * Constructor for the ViewHolder.
+         * בנאי שמאתחל את רכיבי ה־ViewHolder.
          *
-         * @param itemView The inflated view for the item.
+         * @param itemView תצוגת השורה שנבנתה מה־XML.
          */
         GroupViewHolder(View itemView) {
             super(itemView);
-            // מחפש את ה-TextView שבתוך layout בשם recycler_view_row
+
+            // מחפש את רכיב ה-TextView בתוך התצוגה
             textView = itemView.findViewById(R.id.name);
         }
 
         /**
-         * Binds a Group object to the view, setting its name and click behavior.
+         * קושר קבוצה לתוך ה־View – מציג שם ומאזין ללחיצה.
          *
-         * @param group The group object containing the name.
+         * @param group אובייקט הקבוצה להצגה.
          */
         void bind(Group group) {
-            // מגדיר את שם הקבוצה בטקסט
+            // מציג את שם הקבוצה בטקסט
             textView.setText(group.getName());
 
-            // מאזין ללחיצה על כל ה-item – מעביר את המשתמש למסך המילים של הקבוצה הזו
+            // מאזין ללחיצה על כל השורה (itemView)
             itemView.setOnClickListener(v -> {
+                // יוצר Intent שמעביר למסך של המילים בקבוצה
                 Intent intent = new Intent(v.getContext(), words.class);
-                intent.putExtra("workoutName", group.getName()); // מעביר את שם הקבוצה למסך הבא
-                v.getContext().startActivity(intent); // מפעיל את מסך words
+
+                // מעביר את שם הקבוצה למסך הבא כ־extra
+                intent.putExtra("workoutName", group.getName());
+
+                // מתחיל את המסך הבא (words.class)
+                v.getContext().startActivity(intent);
             });
         }
     }

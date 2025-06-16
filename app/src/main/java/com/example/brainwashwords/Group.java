@@ -1,30 +1,27 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // מציין שהמחלקה שייכת לחבילת הקוד הראשית של האפליקציה
 
 /**
- * Represents a group of words (a workout list).
- * Each group can have an ID and a name.
- * This class is used for storing and retrieving group data, especially from Firebase.
+ * Group – מייצגת קבוצה של מילים (Workout).
+ * כל קבוצה כוללת מזהה ייחודי ושם תצוגה.
+ * המחלקה משמשת לשליפה ושמירה של קבוצות, בעיקר מול Firebase.
  */
 public class Group {
 
-    // מזהה ייחודי של הקבוצה (יכול לשמש כמפתח ב-Firebase)
-    private String id;
-
-    // שם הקבוצה – יוצג למשתמש
-    private String name;
+    private String id;   // מזהה ייחודי של הקבוצה – יכול לשמש כמפתח במסד נתונים
+    private String name; // שם הקבוצה – מוצג למשתמש באפליקציה
 
     /**
-     * Empty constructor required for Firebase automatic deserialization.
+     * קונסטרקטור ריק – דרוש ל־Firebase כדי ליצור מופעים של האובייקט באופן אוטומטי.
+     * בלי זה, Firebase לא יצליח לשלוף את הנתונים למסך.
      */
-    public Group() {
-        // קונסטרקטור ריק – Firebase חייב אותו כדי ליצור מופעים של המחלקה
-    }
+    public Group() {}
 
     /**
-     * Full constructor for setting both ID and name.
+     * קונסטרקטור מלא – מאפשר ליצור קבוצה עם מזהה ושם.
+     * שימושי כאשר יוצרים את האובייקט באופן ידני.
      *
-     * @param id   The unique identifier of the group.
-     * @param name The display name of the group.
+     * @param id   מזהה הקבוצה (למשל מזהה Firebase)
+     * @param name שם הקבוצה להצגה
      */
     public Group(String id, String name) {
         this.id = id;
@@ -32,46 +29,45 @@ public class Group {
     }
 
     /**
-     * Constructor for creating a group with only a name.
-     * Useful when the ID is generated later (e.g., by Firebase).
+     * קונסטרקטור עם שם בלבד – שימושי כאשר מזהה נוצר מאוחר יותר (לדוגמה ע"י Firebase).
      *
-     * @param name The display name of the group.
+     * @param name שם הקבוצה
      */
     public Group(String name) {
         this.name = name;
     }
 
     /**
-     * Returns the ID of the group.
+     * מחזיר את מזהה הקבוצה.
      *
-     * @return The group's ID.
+     * @return מחרוזת המזהה
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Sets the ID of the group.
+     * מגדיר את מזהה הקבוצה.
      *
-     * @param id The ID to set for the group.
+     * @param id מזהה חדש שיש להקצות
      */
     public void setId(String id) {
         this.id = id;
     }
 
     /**
-     * Returns the name of the group.
+     * מחזיר את שם הקבוצה.
      *
-     * @return The group's name.
+     * @return מחרוזת שם הקבוצה
      */
     public String getName() {
         return name;
     }
 
     /**
-     * Sets the name of the group.
+     * מגדיר את שם הקבוצה.
      *
-     * @param name The name to set for the group.
+     * @param name שם חדש שיש להקצות
      */
     public void setName(String name) {
         this.name = name;

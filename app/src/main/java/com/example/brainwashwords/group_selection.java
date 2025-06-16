@@ -1,152 +1,145 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // מיקום המחלקה בתוך חבילת הקוד הראשית
 
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.ProgressBar;
-import android.widget.Toast;
+import android.content.Intent; // מאפשר פתיחה של מסכים אחרים
+import android.content.SharedPreferences; // (לא בשימוש כאן) שמירה וטעינה של נתונים פשוטים
+import android.os.Bundle; // מחזיק מידע על מצב האקטיביטי בעת יצירתו
+import android.util.Log; // הדפסת הודעות ליומן (Logcat)
+import android.view.View; // בסיס לכל רכיב UI
+import android.widget.ProgressBar; // רכיב שמציג אנימציית טעינה
+import android.widget.Toast; // הצגת הודעות קצרות למשתמש
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.annotation.NonNull; // אנוטציה שמסייעת למנוע NullPointerException
+import androidx.recyclerview.widget.LinearLayoutManager; // פריסת הרשימה בצורה אנכית
+import androidx.recyclerview.widget.RecyclerView; // תצוגת רשימה שניתן לגלול
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
+import com.google.android.gms.tasks.OnCompleteListener; // מאזין לסיום משימה אסינכרונית
+import com.google.android.gms.tasks.Task; // אובייקט של משימה אסינכרונית
+import com.google.firebase.firestore.FirebaseFirestore; // חיבור למסד הנתונים בענן Firestore
+import com.google.firebase.firestore.QueryDocumentSnapshot; // תוצאה של מסמך יחיד מהשאילתה
+import com.google.firebase.firestore.QuerySnapshot; // תוצאה כוללת של שאילתה במסד הנתונים
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayList; // מבנה נתונים של רשימה דינמית
+import java.util.List; // ממשק של רשימה
 
 /**
- * Activity that displays a list of word groups (workouts) from Firebase Firestore.
- * Allows the user to choose a group for sorting or practicing words.
- * Includes loading indicator and empty state handling.
+ * group_selection – מסך המציג את כל קבוצות המילים הקיימות ב־Firestore.
+ * המשתמש בוחר כאן קבוצה לתרגול או למיון.
+ * התצוגה כוללת טעינה ו־Empty State אם אין קבוצות.
  */
-public class group_selection extends BaseActivity {
+public class group_selection extends BaseActivity { // המחלקה יורשת מ־BaseActivity כדי להפעיל תפריט צד
 
-    private RecyclerView recyclerView;       // תצוגת הרשימה של הקבוצות
-    private GroupAdapter adapter;            // המתאם שמציג את הקבוצות ברשימה
-    private List<Group> groupList;           // רשימת קבוצות שמגיעות מ-Firebase
-    private FirebaseFirestore db;            // חיבור למסד הנתונים של Firestore
-    private ProgressBar progressBar;         // טוען אנימציה בעת שליפת הנתונים
+    private RecyclerView recyclerView;       // רכיב תצוגת רשימה לקבוצות
+    private GroupAdapter adapter;            // המתאם שמציג את האובייקטים בקובץ XML
+    private List<Group> groupList;           // הרשימה שמכילה את כל קבוצות המילים
+    private FirebaseFirestore db;            // חיבור למסד הנתונים Firestore
+    private ProgressBar progressBar;         // אנימציית טעינה בעת שליפת נתונים
 
     /**
-     * Called when the activity is created. Initializes UI and loads data.
-     *
-     * @param savedInstanceState State of the activity from previous instance.
+     * מופעל בעת יצירת המסך.
+     * מאתחל את ה־UI, מפעיל את תפריט הצד, ומטעין את קבוצות המילים מ־Firestore.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        // 🌗 החלת מצב תאורה לפי ההעדפה השמורה
-        ThemeHelper.applySavedTheme(this);
-
+        ThemeHelper.applySavedTheme(this); // טוען מצב תאורה (בהיר/כהה) לפי ההגדרה השמורה
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_group_selection);
+        setContentView(R.layout.activity_group_selection); // קובע את ה־layout של המסך
 
-        // קישור רכיבי UI מתוך ה-XML
+        // קישור בין רכיבי XML לבין משתני ג'אווה
         recyclerView = findViewById(R.id.recyclerView);
         progressBar = findViewById(R.id.progressBar);
 
-        // אתחול רשימת הקבוצות
-        groupList = new ArrayList<>();
+        groupList = new ArrayList<>(); // יצירת רשימה ריקה שתתמלא מהשרת
 
-        // אתחול תפריט צד (Navigation Drawer)
-        setupDrawer();
+        setupDrawer(); // תפריט צד
 
-        // הכנת ה־RecyclerView לתצוגה
-        setupRecyclerView();
+        setupRecyclerView(); // אתחול התצוגה של הרשימה
 
-        // חיבור למסד הנתונים Firestore
-        db = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance(); // התחברות למסד הנתונים בענן
 
-        // שליפת הקבוצות מה-DB
-        loadGroups();
+        loadGroups(); // טעינת קבוצות מהמאגרים
     }
 
     /**
-     * Sets up the RecyclerView with a linear layout and adapter.
+     * אתחול ה־RecyclerView עם פריסה אנכית ומתאם נתונים.
      */
     private void setupRecyclerView() {
-        recyclerView.setLayoutManager(new LinearLayoutManager(this)); // רשימה אנכית
-        adapter = new GroupAdapter(groupList);                        // יצירת מתאם עם הנתונים
-        recyclerView.setAdapter(adapter);                             // חיבור לרכיב RecyclerView
-        recyclerView.setHasFixedSize(true);                           // אופטימיזציה למספר פריטים קבוע
+        recyclerView.setLayoutManager(new LinearLayoutManager(this)); // קובע פריסה אנכית
+        adapter = new GroupAdapter(groupList); // יוצר את המתאם עם הנתונים
+        recyclerView.setAdapter(adapter); // מחבר את המתאם לרשימה בפועל
+        recyclerView.setHasFixedSize(true); // משפר ביצועים אם הגובה לא משתנה לפי התוכן
     }
 
     /**
-     * Loads word groups from Firestore into the list and updates the UI.
+     * טוען את הקבוצות ממסד הנתונים Firebase ומעדכן את המסך בהתאם.
      */
     private void loadGroups() {
-        showLoading(true); // הצגת טעינה
+        showLoading(true); // מציג טעינה
 
-        db.collection("groups")
-                .get()
+        db.collection("groups") // ניגש לאוסף "groups" במסד הנתונים
+                .get() // שולף את כל המסמכים מתוך האוסף
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
                     public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        showLoading(false); // הסתרת טעינה
+                        showLoading(false); // מסיים טעינה
 
                         if (task.isSuccessful()) {
-                            groupList.clear(); // ניקוי הרשימה הקודמת
+                            groupList.clear(); // מנקה את הרשימה הקודמת
+
                             for (QueryDocumentSnapshot document : task.getResult()) {
-                                Group group = document.toObject(Group.class); // יצירת אובייקט מקבוצת הנתונים
-                                groupList.add(group); // הוספה לרשימה
+                                Group group = document.toObject(Group.class); // ממיר כל מסמך לאובייקט מסוג Group
+                                groupList.add(group); // מוסיף לרשימה הכללית
                             }
 
-                            adapter.notifyDataSetChanged(); // עדכון התצוגה
+                            adapter.notifyDataSetChanged(); // מודיע ל־RecyclerView שצריך לרנדר מחדש
 
                             if (groupList.isEmpty()) {
-                                showEmptyState(true); // הצגת "אין נתונים"
+                                showEmptyState(true); // אם הרשימה ריקה – מציג הודעת "אין קבוצות"
                             } else {
-                                showEmptyState(false); // הסתרת מצב ריק
+                                showEmptyState(false); // אם יש קבוצות – מציג אותן
                             }
 
                         } else {
-                            handleError(task.getException()); // טיפול בשגיאה
+                            handleError(task.getException()); // אם התרחשה שגיאה – נטפל בה
                         }
                     }
                 });
     }
 
     /**
-     * Shows or hides the loading indicator and content list.
+     * מציג או מסתיר את ה־ProgressBar ואת ה־RecyclerView.
      *
-     * @param show true to show loading, false to hide.
+     * @param show true = מציג טעינה, false = מציג את התוכן
      */
     private void showLoading(boolean show) {
         if (progressBar != null) {
-            progressBar.setVisibility(show ? View.VISIBLE : View.GONE); // הצגת/הסתרת progressBar
+            progressBar.setVisibility(show ? View.VISIBLE : View.GONE); // מציג או מסתיר את אנימציית הטעינה
         }
         if (recyclerView != null) {
-            recyclerView.setVisibility(show ? View.GONE : View.VISIBLE); // הצגת/הסתרת רשימה
+            recyclerView.setVisibility(show ? View.GONE : View.VISIBLE); // מסתיר או מציג את הרשימה עצמה
         }
     }
 
     /**
-     * Shows a view indicating that no groups are available.
+     * מציג הודעה או תצוגה חלופית כאשר אין קבוצות להצגה.
      *
-     * @param show true to show empty state, false to show list.
+     * @param show true = מציג תצוגת ריקנות, false = מציג את הרשימה
      */
     private void showEmptyState(boolean show) {
-        View emptyView = findViewById(R.id.emptyView); // איתור תצוגת ריקנות (אם קיימת)
+        View emptyView = findViewById(R.id.emptyView); // מוצא את תצוגת ה־Empty אם קיימת ב־XML
         if (emptyView != null) {
-            emptyView.setVisibility(show ? View.VISIBLE : View.GONE);
+            emptyView.setVisibility(show ? View.VISIBLE : View.GONE); // קובע אם תוצג או לא
         }
-        recyclerView.setVisibility(show ? View.GONE : View.VISIBLE); // הסתרה/הצגה של הרשימה
+        recyclerView.setVisibility(show ? View.GONE : View.VISIBLE); // מסתיר את הרשימה במצב ריק
     }
 
     /**
-     * Displays an error message in case of a failure to load data.
+     * מציג הודעת שגיאה במידה ולא הצלחנו לטעון קבוצות.
      *
-     * @param e The exception that occurred.
+     * @param e השגיאה שהתרחשה
      */
     private void handleError(Exception e) {
         Toast.makeText(this,
                 "Error loading groups: " + e.getMessage(),
-                Toast.LENGTH_SHORT).show(); // הודעת שגיאה למשתמש
+                Toast.LENGTH_SHORT).show(); // מציג טוסט עם תוכן השגיאה
     }
 }

@@ -1,54 +1,56 @@
-// 🔹 FirebaseUtils.java – גרסה ללא FirebaseAuth
+// 🔹 FirebaseUtils.java – גרסה ללא שימוש ב־FirebaseAuth
+package com.example.brainwashwords; // מציין שהקובץ שייך לחבילת הקוד הראשית של האפליקציה
 
-package com.example.brainwashwords;
+import android.content.Context; // דרוש כדי לגשת למשאבים של האפליקציה (כמו SharedPreferences)
+import android.content.SharedPreferences; // מאפשר שמירת נתונים פשוטים בזיכרון המקומי של האפליקציה
+import android.util.Log; // מאפשר לכתוב הודעות ליומן (Logcat) לצורכי דיבוג
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.util.Log;
+import com.google.firebase.database.DatabaseReference; // מציין מיקום ב־Realtime Database
+import com.google.firebase.database.FirebaseDatabase; // מאפשר גישה לבסיס הנתונים בזמן אמת
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
-import java.util.HashMap;
-import java.util.Map;
+import java.util.HashMap; // מבנה נתונים למיפוי key-value
+import java.util.Map; // ממשק של HashMap
 
 /**
- * Utility class for saving user test results to Firebase Realtime Database.
- * This version uses SharedPreferences to retrieve the user ID instead of FirebaseAuth.
+ * מחלקת עזר לשמירת תוצאות מבחנים למסד הנתונים Firebase Realtime Database.
+ * גרסה זו משתמשת ב־SharedPreferences כדי לזהות את המשתמש – ללא FirebaseAuth.
  */
 public class FirebaseUtils {
 
     /**
-     * Saves the result of a test (success rate) for a specific user and test type into Firebase.
+     * שומר את תוצאת המבחן (אחוזי הצלחה) עבור משתמש ספציפי ולסוג מבחן מסוים.
      *
-     * @param context     The context used to access SharedPreferences.
-     * @param testType    The type of test (e.g., "MultipleChoice", "AudioTest").
-     * @param successRate The user's success rate in the test (as a float percentage, e.g., 85.0).
+     * @param context     הקשר (Context) של האקטיביטי שממנו נקראה הפונקציה – משמש לשליפת SharedPreferences.
+     * @param testType    סוג המבחן – לדוגמה "MultipleChoice", "AudioTest".
+     * @param successRate האחוז שהמשתמש הצליח במבחן (float, לדוגמה 85.0).
      */
     public static void saveTestResult(Context context, String testType, float successRate) {
-        // ניגש ל-SharedPreferences כדי לקבל את מזהה המשתמש ששמור באפליקציה
-        SharedPreferences prefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
-        String userId = prefs.getString("uid", null); // שליפת המזהה (uid)
 
-        // בדיקה אם המשתמש לא מחובר – במקרה כזה לא שומרים כלום
+        // גישה ל־SharedPreferences ע״י שם הקובץ "UserPrefs"
+        SharedPreferences prefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE);
+
+        // שליפת מזהה המשתמש מה־SharedPreferences (המפתח הוא "uid")
+        String userId = prefs.getString("uid", null);
+
+        // אם לא מצאנו uid – אי אפשר לשמור כלום, נרשום שגיאה ונפסיק
         if (userId == null) {
             Log.e("SAVE_TEST", "User ID not found in SharedPreferences");
             return;
         }
 
-        // יצירת רפרנס לנתיב בבסיס הנתונים של Firebase:
+        // יצירת רפרנס למיקום בבסיס הנתונים:
         // users/{userId}/tests/{testType}
         DatabaseReference ref = FirebaseDatabase.getInstance()
-                .getReference("users")
-                .child(userId)
-                .child("tests")
-                .child(testType);
+                .getReference("users")     // טבלת המשתמשים
+                .child(userId)             // משתמש נוכחי
+                .child("tests")            // סעיף מבחנים
+                .child(testType);          // סוג המבחן הספציפי
 
-        // בניית מפת נתונים לשמירה: {"successRate": value}
+        // יצירת map עם הנתונים שרוצים לשמור – במקרה הזה, רק successRate
         Map<String, Object> data = new HashMap<>();
-        data.put("successRate", successRate);
+        data.put("successRate", successRate); // מפתח: "successRate", ערך: אחוז הצלחה
 
-        // שמירת הנתונים ב-Firebase (הנתונים נדרסים אם קיימים)
+        // שמירה בפועל למסד הנתונים – פעולה זו תדרוס ערכים קיימים
         ref.setValue(data);
     }
 }

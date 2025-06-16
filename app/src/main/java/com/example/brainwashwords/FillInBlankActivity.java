@@ -1,60 +1,59 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // מציין שהמחלקה שייכת לחבילת הפרויקט הראשית
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.util.Log;
-import android.view.View;
-import android.widget.*;
+import android.content.Intent; // מאפשר מעבר בין מסכים (Activities)
+import android.os.Bundle; // אובייקט להעברת מידע בין מחזורי חיים של האקטיביטי
+import android.os.CountDownTimer; // טיימר שמבצע ספירה לאחור
+import android.util.Log; // מאפשר כתיבת הודעות דיבוג ליומן
+import android.view.View; // מחלקת בסיס לרכיבי UI
+import android.widget.*; // כולל טקסטים, כפתורים, תיבות קלט וכו'
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity; // מחלקת בסיס למסכי Android עם תמיכה ב־Toolbar
 
-import com.google.firebase.firestore.*;
+import com.google.firebase.firestore.*; // עבודה עם Firebase Firestore (מסד נתונים בענן)
 
-import org.json.*;
+import org.json.*; // עבודה עם פורמט JSON
 
-import java.io.IOException;
-import java.util.*;
+import java.io.IOException; // טיפול בשגיאות IO
+import java.util.*; // כולל רשימות וכלי עזר (כמו Collections)
 
-import okhttp3.*;
+import okhttp3.*; // ספרייה לשליחת בקשות רשת (API)
 
 /**
- * FillInBlankActivity – פעילות המבחן שבה מוצג משפט עם מילה חסרה שהמשתמש צריך להשלים.
- * המשפט נוצר על ידי AI (באמצעות OpenRouter), על בסיס מילה שסומנה כ־known.
- * המבחן כולל מצב מבחן עם טיימר של 15 שניות, ניקוד, ושמירה ל־Firebase.
+ * FillInBlankActivity – מבחן השלמה עם מילה חסרה.
+ * נשלפת מילה שסומנה כ־known, וה־AI יוצר עליה משפט עם מקום ריק.
+ * כולל טיימר, ניקוד, שמירת תוצאה.
  */
 public class FillInBlankActivity extends BaseActivity {
 
-    private TextView sentenceText, timerText;
-    private EditText userInput;
-    private Button submitBtn;
-    private Switch modeSwitch;
+    // רכיבי ממשק משתמש
+    private TextView sentenceText, timerText; // טקסט להצגת המשפט והטיימר
+    private EditText userInput; // קלט מהמשתמש
+    private Button submitBtn; // כפתור שליחה
+    private Switch modeSwitch; // מתג בין מצב מבחן לתרגול
 
+    // חיבור למסד הנתונים
     private FirebaseFirestore db;
-    private List<Word> wordList = new ArrayList<>();
-    private Word currentWord;
+    private List<Word> wordList = new ArrayList<>(); // רשימת מילים מתוך הקבוצה
+    private Word currentWord; // המילה הנוכחית לשאלה
 
+    // ניקוד
     private int score = 0;
     private int totalQuestions = 0;
-    private static final int MAX_QUESTIONS = 10;
+    private static final int MAX_QUESTIONS = 10; // סך שאלות למבחן
 
-    private final String apiKey = "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."; // מפתח ל־OpenRouter – יש להחליף בזה שלך
+    private final String apiKey = "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"; // מפתח חיבור ל־OpenRouter (להחלפה)
 
-    private boolean isWaitingForResponse = false;
-    private boolean isTestMode = false;
-    private CountDownTimer countDownTimer;
+    private boolean isWaitingForResponse = false; // אם ממתין לתשובת AI
+    private boolean isTestMode = false; // האם מופעל מצב מבחן
+    private CountDownTimer countDownTimer; // הטיימר לפעולה
 
-    private String workoutName;
+    private String workoutName; // שם הקבוצה שממנה נשלפות מילים
 
-    /**
-     * מופעל כשנוצר המסך. טוען את הקבוצה, המילים, ומאתחל UI + מאזינים.
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ThemeHelper.applySavedTheme(this);
-
+        ThemeHelper.applySavedTheme(this); // מפעיל מצב תאורה לפי ההעדפות
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_fill_in_blank);
+        setContentView(R.layout.activity_fill_in_blank); // טוען את עיצוב המסך מה־XML
 
         // קישור רכיבי UI
         sentenceText = findViewById(R.id.sentenceText);
@@ -62,37 +61,35 @@ public class FillInBlankActivity extends BaseActivity {
         submitBtn = findViewById(R.id.btnSubmit);
         modeSwitch = findViewById(R.id.modeSwitch);
         timerText = findViewById(R.id.timerText);
-        setupDrawer();
+        setupDrawer(); // תפריט צד
 
-        db = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance(); // התחברות ל־Firestore
 
-        // קבלת שם הקבוצה מהמבחן
+        // קבלת שם הקבוצה מהמבחן (אם לא נשלח – נבחר workout1)
         workoutName = getIntent().getStringExtra("workoutName");
         if (workoutName == null) workoutName = "workout1";
 
-        // מעבר בין מצב תרגול למבחן
+        // מעבר בין מצב מבחן לתרגול
         modeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             isTestMode = isChecked;
-            timerText.setVisibility(isTestMode ? View.VISIBLE : View.GONE);
+            timerText.setVisibility(isTestMode ? View.VISIBLE : View.GONE); // מציג טיימר רק במצב מבחן
             Toast.makeText(this,
                     isTestMode ? "Test Mode Activated" : "Practice Mode Activated",
                     Toast.LENGTH_SHORT).show();
         });
 
-        // שליפת מילים מהקבוצה
+        // טוען את המילים מהקבוצה שנבחרה
         loadWords(workoutName);
 
-        // לחיצה על כפתור שליחה
+        // מאזין ללחיצה על כפתור שליחה
         submitBtn.setOnClickListener(v -> {
-            if (countDownTimer != null) countDownTimer.cancel();
-            timerText.setVisibility(View.GONE);
-            checkAnswer();
+            if (countDownTimer != null) countDownTimer.cancel(); // מבטל טיימר אם פעיל
+            timerText.setVisibility(View.GONE); // מסתיר את הטיימר
+            checkAnswer(); // בודק את התשובה
         });
     }
 
-    /**
-     * טוען את המילים שסומנו כ־known מתוך קבוצת המילים שנבחרה.
-     */
+    // טוען את המילים שסומנו כ־known מתוך הקבוצה
     private void loadWords(String workoutName) {
         db.collection("groups").document(workoutName).collection("words")
                 .get()
@@ -110,16 +107,14 @@ public class FillInBlankActivity extends BaseActivity {
 
                     if (wordList.size() < 4) {
                         Toast.makeText(this, "Please mark at least 4 known words to start the test.", Toast.LENGTH_LONG).show();
-                        finish();
+                        finish(); // סוגר את המסך אם אין מספיק מילים
                     } else {
-                        showNextQuestion();
+                        showNextQuestion(); // מתחיל את המבחן
                     }
                 });
     }
 
-    /**
-     * מציג שאלה חדשה על סמך מילה אקראית מהרשימה.
-     */
+    // מציג שאלה חדשה מתוך מילה אקראית
     private void showNextQuestion() {
         if (isWaitingForResponse) {
             Toast.makeText(this, "Wait for the AI to respond...", Toast.LENGTH_SHORT).show();
@@ -128,19 +123,16 @@ public class FillInBlankActivity extends BaseActivity {
 
         if (countDownTimer != null) countDownTimer.cancel();
         timerText.setVisibility(View.GONE);
+        userInput.setText(""); // איפוס קלט
 
-        userInput.setText("");
-        Collections.shuffle(wordList);
-        currentWord = wordList.get(0);
+        Collections.shuffle(wordList); // ערבוב מילים
+        currentWord = wordList.get(0); // בחירת מילה אקראית
+        generateSentence(currentWord.getWord()); // שולח ל־AI ליצירת משפט
 
-        generateSentence(currentWord.getWord());
-
-        if (isTestMode) startTimer();
+        if (isTestMode) startTimer(); // אם במבחן – טיימר
     }
 
-    /**
-     * מפעיל טיימר של 15 שניות (מצב מבחן).
-     */
+    // טיימר של 15 שניות למענה
     private void startTimer() {
         timerText.setVisibility(View.VISIBLE);
         timerText.setText("Time left: 15");
@@ -159,18 +151,16 @@ public class FillInBlankActivity extends BaseActivity {
                             Toast.LENGTH_SHORT).show();
 
                     if (totalQuestions >= MAX_QUESTIONS) {
-                        showResult();
+                        showResult(); // סיום
                     } else {
-                        showNextQuestion();
+                        showNextQuestion(); // שאלה חדשה
                     }
                 }
             }
         }.start();
     }
 
-    /**
-     * שולח בקשה ל-AI ליצירת משפט עם מקום ריק על בסיס מילה.
-     */
+    // שולח בקשה ל־AI שייצור משפט עם מקום ריק עבור מילה
     private void generateSentence(String word) {
         sentenceText.setText("AI is thinking...");
         isWaitingForResponse = true;
@@ -199,6 +189,7 @@ public class FillInBlankActivity extends BaseActivity {
                 .post(RequestBody.create(jsonBody.toString(), MediaType.parse("application/json")))
                 .build();
 
+        // שליחת הבקשה ברקע
         client.newCall(request).enqueue(new Callback() {
             @Override
             public void onFailure(Call call, IOException e) {
@@ -233,9 +224,7 @@ public class FillInBlankActivity extends BaseActivity {
         });
     }
 
-    /**
-     * בודק אם תשובת המשתמש נכונה או לא.
-     */
+    // בדיקת תשובת המשתמש מול המילה המקורית
     private void checkAnswer() {
         String answer = userInput.getText().toString().trim();
         totalQuestions++;
@@ -254,26 +243,19 @@ public class FillInBlankActivity extends BaseActivity {
         }
     }
 
-    /**
-     * מציג את תוצאת המבחן, שומר אותה ל־Firebase, ועובר למסך תוצאה.
-     */
+    // מציג תוצאה, שומר ל־Firebase, ועובר למסך תוצאה
     private void showResult() {
         float successRate = ((float) score / totalQuestions) * 100f;
-
-        // שמירה ל־Firebase תחת FillInBlank
         FirebaseUtils.saveTestResult(this, "FillInBlank", successRate);
 
-        // מעבר למסך תוצאה
         Intent intent = new Intent(this, QuizResultActivity.class);
         intent.putExtra("score", score);
         intent.putExtra("total", totalQuestions);
         startActivity(intent);
-        finish();
+        finish(); // סוגר את המסך הנוכחי
     }
 
-    /**
-     * ביטול הטיימר בעת סגירת המסך.
-     */
+    // מנקה טיימר כשעוזבים את המסך
     @Override
     protected void onDestroy() {
         if (countDownTimer != null) countDownTimer.cancel();

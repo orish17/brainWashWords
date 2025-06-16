@@ -1,138 +1,108 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // מגדיר את שם החבילה באפליקציה
 
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ImageButton;
-import android.widget.Toast;
+import android.content.Intent; // מאפשר מעבר בין מסכים
+import android.content.SharedPreferences; // מאפשר שמירת מידע מקומי באפליקציה
+import android.os.Bundle; // משמש לשמירת מצב activity
+import android.widget.*; // כולל רכיבי ממשק: טקסט, שדות קלט, כפתורים
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull; // תכונה לזיהוי ערכים שאינם null
+import androidx.appcompat.app.AppCompatActivity; // מחלקת בסיס לפעילויות עם תמיכה בעיצוב מודרני
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.auth.FirebaseAuth; // Firebase – ניהול הרשאות
+import com.google.firebase.auth.FirebaseUser; // אובייקט משתמש מ-Firebase
+import com.google.firebase.auth.UserProfileChangeRequest; // שינוי שם תצוגה
+import com.google.firebase.database.FirebaseDatabase; // מסד נתונים Realtime של Firebase
 
-/**
- * Signup Activity – מאפשר למשתמש להירשם עם שם, אימייל וסיסמה.
- * הנתונים נשמרים ב־Firebase Realtime Database, ולאחר ההרשמה המשתמש מועבר למסך הבית.
- */
-public class signup extends AppCompatActivity {
+public class signup extends AppCompatActivity { // הפעילות של מסך ההרשמה
 
-    ImageButton imageButton; // כפתור הרשמה
-    EditText Name, Email, Password, RePassword; // שדות קלט מהמשתמש
-    Button button5; // כפתור מעבר למסך התחברות
-    private DatabaseReference usersRef; // רפרנס לטבלת users ב־Firebase
+    private EditText Name, Email, Password, RePassword; // שדות קלט: שם, אימייל, סיסמה ואישור
+    private ImageButton registerButton; // כפתור להרשמה
+    private Button loginRedirectButton; // כפתור למעבר למסך התחברות
+    private FirebaseAuth mAuth; // מנגנון Firebase לאימות
 
-    /**
-     * onCreate – מופעל כשנוצר המסך. מאתחל רכיבי UI ומאזינים.
-     */
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_signup);
+    protected void onCreate(Bundle savedInstanceState) { // מתבצע כשנטען המסך
+        super.onCreate(savedInstanceState); // קריאה למחלקת העל
+        setContentView(R.layout.activity_signup); // קובע את קובץ העיצוב למסך
 
-        // התחברות ל־Realtime Database של Firebase
-        FirebaseDatabase orishDatabase = FirebaseDatabase.getInstance();
-        usersRef = orishDatabase.getReference("users");
+        mAuth = FirebaseAuth.getInstance(); // אתחול FirebaseAuth
 
-        // קישור רכיבי UI מה-XML
-        imageButton = findViewById(R.id.imageButton);
-        Name = findViewById(R.id.editTextTextPersonName);
-        Email = findViewById(R.id.editTextTextPersonName2);
-        Password = findViewById(R.id.editTextTextPassword);
-        RePassword = findViewById(R.id.editTextTextPassword2);
-        button5 = findViewById(R.id.button5);
+        Name = findViewById(R.id.editTextTextPersonName); // שדה קלט שם
+        Email = findViewById(R.id.editTextTextPersonName2); // שדה קלט אימייל
+        Password = findViewById(R.id.editTextTextPassword); // שדה קלט סיסמה
+        RePassword = findViewById(R.id.editTextTextPassword2); // שדה קלט אישור סיסמה
+        registerButton = findViewById(R.id.imageButton); // כפתור הרשמה
+        loginRedirectButton = findViewById(R.id.button5); // כפתור מעבר למסך התחברות
 
-        // כפתור הרשמה – מפעיל את המתודה signUpUser
-        imageButton.setOnClickListener(v -> signUpUser());
+        registerButton.setOnClickListener(v -> registerUser()); // הפעלת מתודת הרשמה בלחיצה
 
-        // כפתור מעבר חזרה למסך התחברות
-        button5.setOnClickListener(v -> {
-            Intent intent = new Intent(signup.this, login.class);
-            startActivity(intent);
-            finish(); // מסיים את המסך הנוכחי – שלא יהיה חזור (Back)
+        loginRedirectButton.setOnClickListener(v -> { // בלחיצה על "יש לי חשבון"
+            startActivity(new Intent(this, login.class)); // מעבר למסך login
+            finish(); // סיום המסך הנוכחי
         });
     }
 
-    /**
-     * signUpUser – אחראי על תהליך ההרשמה: ולידציה, שמירה ל־Firebase, מעבר למסך הבית.
-     */
-    private void signUpUser() {
-        String name = Name.getText().toString().trim();
-        String email = Email.getText().toString().trim();
-        String password = Password.getText().toString().trim();
-        String rePassword = RePassword.getText().toString().trim();
+    private void registerUser() { // פונקציית רישום משתמש
+        String name = Name.getText().toString().trim(); // קבלת השם מהקלט
+        String email = Email.getText().toString().trim(); // קבלת האימייל מהקלט
+        String password = Password.getText().toString().trim(); // קבלת הסיסמה מהקלט
+        String rePassword = RePassword.getText().toString().trim(); // קבלת אישור הסיסמה
 
-        // בדיקת תקינות של הקלט
-        if (!validateInput(name, email, password, rePassword)) return;
+        if (!validateInput(name, email, password, rePassword)) return; // בדיקת תקינות שדות
 
-        // יצירת מפתח ייחודי חדש למשתמש
-        String userId = usersRef.push().getKey();
-        if (userId == null) {
-            Toast.makeText(this, "Something went wrong", Toast.LENGTH_SHORT).show();
-            return;
-        }
+        mAuth.createUserWithEmailAndPassword(email, password) // יצירת משתמש חדש ב-Firebase
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) { // אם ההרשמה הצליחה
+                        FirebaseUser user = mAuth.getCurrentUser(); // קבלת המשתמש הנוכחי
+                        if (user != null) {
+                            String uid = user.getUid(); // מזהה ייחודי של המשתמש
 
-        // יצירת אובייקט משתמש חדש
-        User newUser = new User(name, email, password);
+                            // עדכון שם בפרופיל FirebaseAuth
+                            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                                    .setDisplayName(name)
+                                    .build();
+                            user.updateProfile(profileUpdates); // שמירת השם
 
-        // שמירת המשתמש ב־Realtime Database
-        usersRef.child(userId).setValue(newUser).addOnCompleteListener(task -> {
-            if (task.isSuccessful()) {
-                // איפוס מילים מסומנות – רק ליתר ביטחון
-                FirebaseDatabase.getInstance()
-                        .getReference("users")
-                        .child(userId)
-                        .child("knownWords")
-                        .removeValue();
+                            // שמירה ב-Firebase Realtime Database
+                            User newUser = new User(name, email, password); // יצירת אובייקט משתמש
+                            FirebaseDatabase.getInstance().getReference("users")
+                                    .child(uid)
+                                    .setValue(newUser); // שמירה למסד הנתונים
 
-                // שמירת מזהה המשתמש ופרטים בזיכרון המקומי
-                SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
-                prefs.edit()
-                        .putString("uid", userId)
-                        .putString("username", name)
-                        .apply();
+                            // שמירה מקומית
+                            SharedPreferences prefs = getSharedPreferences("UserPrefs", MODE_PRIVATE);
+                            prefs.edit()
+                                    .putString("uid", uid)
+                                    .putString("username", name)
+                                    .apply();
 
-                Toast.makeText(signup.this, "Signup successful!", Toast.LENGTH_SHORT).show();
+                            // שליחת אימייל אימות
+                            user.sendEmailVerification(); // שליחת קישור לאימות מייל
+                            Toast.makeText(this, "Signup successful! Please verify your email.", Toast.LENGTH_LONG).show();
 
-                // מעבר למסך הבית עם העברת השם
-                Intent intent = new Intent(signup.this, home.class);
-                intent.putExtra("USERNAME", name);
-                startActivity(intent);
-                finish();
-            } else {
-                Toast.makeText(this, "Signup failed", Toast.LENGTH_SHORT).show();
-            }
-        });
+                            mAuth.signOut(); // ניתוק המשתמש עד לאימות
+                            startActivity(new Intent(this, login.class)); // חזרה למסך login
+                            finish();
+                        }
+                    } else {
+                        Toast.makeText(this, "Signup failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show(); // שגיאת הרשמה
+                    }
+                });
     }
 
-    /**
-     * validateInput – מבצעת בדיקות על קלט המשתמש לפני שליחה ל־Firebase.
-     *
-     * @return true אם הכל תקין, אחרת false.
-     */
-    private boolean validateInput(String name, String email, String password, String rePassword) {
+    private boolean validateInput(String name, String email, String password, String rePassword) { // פונקציה לבדוק תקינות קלט
         if (name.isEmpty() || email.isEmpty() || password.isEmpty() || rePassword.isEmpty()) {
-            Toast.makeText(this, "Please fill out all fields", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show(); // בדיקה שהכול מלא
             return false;
         }
-
         if (!password.equals(rePassword)) {
-            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Passwords do not match", Toast.LENGTH_SHORT).show(); // בדיקה שהסיסמאות תואמות
             return false;
         }
-
-        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            Toast.makeText(this, "Please enter a valid email", Toast.LENGTH_SHORT).show();
-            return false;
-        }
-
         if (password.length() < 6) {
-            Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Password must be at least 6 characters", Toast.LENGTH_SHORT).show(); // אורך מינימלי לסיסמה
             return false;
         }
-
-        return true;
+        return true; // כל הבדיקות תקינות
     }
 }

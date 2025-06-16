@@ -1,16 +1,16 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // הגדרת מיקום המחלקה בפרויקט
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.os.CountDownTimer;
-import android.view.View;
-import android.widget.*;
+import android.content.Intent; // מאפשר לעבור בין מסכים
+import android.os.Bundle; // מאפשר להעביר נתונים בעת פתיחת מסך
+import android.os.CountDownTimer; // טיימר ספירה לאחור
+import android.view.View; // ניהול אירועים על רכיבי UI
+import android.widget.*; // כולל TextView, Button, Switch, Toast וכו'
 
-import com.google.firebase.firestore.*;
+import com.google.firebase.firestore.*; // עבודה עם Firestore של Firebase
 
-import java.util.*;
+import java.util.*; // כולל רשימות, מחלקות shuffle ועוד
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity; // בסיס למסכים מודרניים עם תמיכה בעיצוב
 
 /**
  * MultipleChoiceActivity – פעילות מבחן רב-ברירה.
@@ -19,31 +19,28 @@ import androidx.appcompat.app.AppCompatActivity;
  */
 public class MultipleChoiceActivity extends BaseActivity {
 
-    private TextView questionText, timerText;
-    private Button[] optionButtons = new Button[4]; // 4 אפשרויות תשובה
-    private Switch modeSwitch;
+    private TextView questionText, timerText; // תצוגות שאלה וטיימר
+    private Button[] optionButtons = new Button[4]; // מערך של 4 כפתורי תשובות
+    private Switch modeSwitch; // מתג מעבר בין מצב תרגול למבחן
 
-    private FirebaseFirestore db;
-    private List<Word> wordList = new ArrayList<>();
-    private Word currentWord;
-    private String correctAnswer;
+    private FirebaseFirestore db; // מסד הנתונים של Firestore
+    private List<Word> wordList = new ArrayList<>(); // רשימת מילים (רק כאלו שסומנו כ־known)
+    private Word currentWord; // המילה הנוכחית
+    private String correctAnswer; // הפירוש הנכון למילה הנוכחית
 
-    private int score = 0;
-    private int totalQuestions = 0;
-    private static final int MAX_QUESTIONS = 10;
-    private boolean isTestMode = false;
-    private CountDownTimer countDownTimer;
+    private int score = 0; // ניקוד נוכחי
+    private int totalQuestions = 0; // סך כל השאלות שנענו
+    private static final int MAX_QUESTIONS = 10; // מספר השאלות במבחן
+    private boolean isTestMode = false; // האם אנחנו במצב מבחן
+    private CountDownTimer countDownTimer; // אובייקט טיימר
 
-    /**
-     * מופעל בעת פתיחת הפעילות – קושר רכיבי UI ומעלה מילים מה־Firebase.
-     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ThemeHelper.applySavedTheme(this);
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_multiple_choice);
+        ThemeHelper.applySavedTheme(this); // הפעלת ערכת נושא (מצב כהה/בהיר)
+        super.onCreate(savedInstanceState); // קריאה ל־onCreate של ההורה
+        setContentView(R.layout.activity_multiple_choice); // קביעת ה־layout של המסך
 
-        // קישור רכיבים מה-XML
+        // קישור רכיבי XML לקוד
         modeSwitch = findViewById(R.id.modeSwitch);
         questionText = findViewById(R.id.questionText);
         timerText = findViewById(R.id.timerText);
@@ -51,36 +48,32 @@ public class MultipleChoiceActivity extends BaseActivity {
         optionButtons[1] = findViewById(R.id.optionB);
         optionButtons[2] = findViewById(R.id.optionC);
         optionButtons[3] = findViewById(R.id.optionD);
-        setupDrawer();
+        setupDrawer(); // הפעלת תפריט הצד
 
-        db = FirebaseFirestore.getInstance();
+        db = FirebaseFirestore.getInstance(); // התחברות ל־Firestore
 
-        // מעבר בין מצב מבחן לתרגול
+        // מאזין למתג – שינוי מצב מבחן או תרגול
         modeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             isTestMode = isChecked;
-            timerText.setVisibility(isTestMode ? View.VISIBLE : View.GONE);
+            timerText.setVisibility(isTestMode ? View.VISIBLE : View.GONE); // מציג טיימר רק במבחן
             Toast.makeText(this,
                     isTestMode ? "Test Mode Activated" : "Practice Mode Activated",
                     Toast.LENGTH_SHORT).show();
         });
 
-        // שליפת מילים שסומנו כ-known
-        loadWordsFromFirebase();
+        loadWordsFromFirebase(); // טעינת מילים שסומנו כ־known
 
-        // מאזין לכל אחד מהכפתורים
+        // חיבור מאזין לכל כפתור תשובה
         for (Button button : optionButtons) {
             button.setOnClickListener(this::checkAnswer);
         }
     }
 
-    /**
-     * טוען את המילים מתוך קבוצת "workout1" שסומנו כ־known.
-     */
     private void loadWordsFromFirebase() {
         db.collection("groups").document("workout1").collection("words")
                 .get()
                 .addOnSuccessListener(result -> {
-                    wordList.clear();
+                    wordList.clear(); // איפוס רשימת מילים
 
                     for (QueryDocumentSnapshot doc : result) {
                         String wordText = doc.getString("word");
@@ -88,25 +81,23 @@ public class MultipleChoiceActivity extends BaseActivity {
                         Boolean known = doc.getBoolean("known");
 
                         if (wordText != null && definition != null && Boolean.TRUE.equals(known)) {
+                            // יצירת אובייקט Word רק אם המילה מוכרת
                             wordList.add(new Word(wordText, true, definition, doc.getId(), "workout1"));
                         }
                     }
 
                     if (wordList.size() < 4) {
                         Toast.makeText(this, "אתה צריך למיין לפחות 4 מילים!", Toast.LENGTH_LONG).show();
-                        finish();
+                        finish(); // יציאה מהמסך
                     } else {
-                        showNextQuestion();
+                        showNextQuestion(); // מעבר לשאלה ראשונה
                     }
                 });
     }
 
-    /**
-     * מציג שאלה חדשה – מילה עם 4 פירושים (אחד נכון, 3 שגויים).
-     */
     private void showNextQuestion() {
-        if (countDownTimer != null) countDownTimer.cancel();
-        timerText.setVisibility(View.GONE);
+        if (countDownTimer != null) countDownTimer.cancel(); // עצירת טיימר קודם
+        timerText.setVisibility(View.GONE); // הסתרת טיימר
 
         if (wordList.size() < 4) {
             Toast.makeText(this, "לא מספיק מילים למבחן!", Toast.LENGTH_LONG).show();
@@ -115,39 +106,36 @@ public class MultipleChoiceActivity extends BaseActivity {
         }
 
         List<Word> shuffled = new ArrayList<>(wordList);
-        Collections.shuffle(shuffled);
+        Collections.shuffle(shuffled); // ערבוב מילים
 
-        currentWord = shuffled.get(0); // המילה לשאלה הזו
-        correctAnswer = currentWord.getDefinition();
+        currentWord = shuffled.get(0); // מילה לשאלה הנוכחית
+        correctAnswer = currentWord.getDefinition(); // שמירת התשובה הנכונה
 
-        // יצירת רשימת אפשרויות
+        // בניית רשימת תשובות
         List<String> options = new ArrayList<>();
         options.add(correctAnswer);
         options.add(shuffled.get(1).getDefinition());
         options.add(shuffled.get(2).getDefinition());
         options.add(shuffled.get(3).getDefinition());
-        Collections.shuffle(options);
+        Collections.shuffle(options); // ערבוב תשובות
 
-        questionText.setText("מה הפירוש של: " + currentWord.getWord());
+        questionText.setText("מה הפירוש של: " + currentWord.getWord()); // הצגת השאלה
 
         for (int i = 0; i < 4; i++) {
-            optionButtons[i].setText(options.get(i));
-            optionButtons[i].setEnabled(true);
+            optionButtons[i].setText(options.get(i)); // הצגת תשובה על כל כפתור
+            optionButtons[i].setEnabled(true); // הפעלת לחיצה
         }
 
-        if (isTestMode) startTimer();
+        if (isTestMode) startTimer(); // התחלת טיימר במצב מבחן
     }
 
-    /**
-     * מפעיל טיימר של 7 שניות במצב מבחן.
-     */
     private void startTimer() {
         timerText.setVisibility(View.VISIBLE);
         timerText.setText("Time left: 7");
 
         countDownTimer = new CountDownTimer(7000, 1000) {
             public void onTick(long millisUntilFinished) {
-                timerText.setText("Time left: " + millisUntilFinished / 1000);
+                timerText.setText("Time left: " + millisUntilFinished / 1000); // עדכון טיימר
             }
 
             public void onFinish() {
@@ -158,20 +146,17 @@ public class MultipleChoiceActivity extends BaseActivity {
                         Toast.LENGTH_SHORT).show();
 
                 if (totalQuestions >= MAX_QUESTIONS) {
-                    showResult();
+                    showResult(); // הצגת תוצאה
                 } else {
-                    showNextQuestion();
+                    showNextQuestion(); // שאלה חדשה
                 }
             }
-        }.start();
+        }.start(); // התחלת הטיימר
     }
 
-    /**
-     * בודק האם המשתמש בחר בתשובה הנכונה.
-     */
     private void checkAnswer(View v) {
-        if (countDownTimer != null) countDownTimer.cancel();
-        timerText.setVisibility(View.GONE);
+        if (countDownTimer != null) countDownTimer.cancel(); // עצירת טיימר
+        timerText.setVisibility(View.GONE); // הסתרת טיימר
 
         Button clicked = (Button) v;
         String answer = clicked.getText().toString();
@@ -184,12 +169,11 @@ public class MultipleChoiceActivity extends BaseActivity {
             Toast.makeText(this, "❌ Incorrect! The correct answer was: " + correctAnswer, Toast.LENGTH_SHORT).show();
         }
 
-        // מניעת לחיצה חוזרת
         for (Button b : optionButtons) {
-            b.setEnabled(false);
+            b.setEnabled(false); // מניעת לחיצה כפולה
         }
 
-        // שאלה הבאה תוך שנייה
+        // השהיה של שנייה לפני השאלה הבאה
         v.postDelayed(() -> {
             if (totalQuestions >= MAX_QUESTIONS) {
                 showResult();
@@ -199,26 +183,20 @@ public class MultipleChoiceActivity extends BaseActivity {
         }, 1000);
     }
 
-    /**
-     * מציג את התוצאה, שומר ל־Firebase, ומעביר למסך סיכום.
-     */
     private void showResult() {
-        float successRate = ((float) score / totalQuestions) * 100f;
-        FirebaseUtils.saveTestResult(this, "MultipleChoice", successRate);
+        float successRate = ((float) score / totalQuestions) * 100f; // חישוב אחוז הצלחה
+        FirebaseUtils.saveTestResult(this, "MultipleChoice", successRate); // שמירה ל־Firebase
 
-        Intent intent = new Intent(this, QuizResultActivity.class);
+        Intent intent = new Intent(this, QuizResultActivity.class); // מעבר למסך תוצאה
         intent.putExtra("score", score);
         intent.putExtra("total", totalQuestions);
         startActivity(intent);
         finish();
     }
 
-    /**
-     * ביטול הטיימר במעבר בין מסכים.
-     */
     @Override
     protected void onDestroy() {
-        if (countDownTimer != null) countDownTimer.cancel();
+        if (countDownTimer != null) countDownTimer.cancel(); // ביטול טיימר בעת סגירה
         super.onDestroy();
     }
 }

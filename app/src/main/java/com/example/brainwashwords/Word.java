@@ -1,93 +1,60 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // הצהרת החבילה שבה נמצאת המחלקה
 
 /**
- * Represents a single word in the app.
- * Each word has a definition, an ID, a group ID, and a "known" flag indicating whether the user knows it.
+ * מחלקה המייצגת מילה בודדת באפליקציה.
+ * כל מילה כוללת טקסט, תרגום/הגדרה, סטטוס אם היא מוכרת, מזהה ייחודי, וקבוצת שייכות.
  */
 public class Word {
 
-    // המילה עצמה (באנגלית)
-    private String word;
-
-    // האם המשתמש סימן את המילה כ"מוכרת"
-    private boolean known;
-
-    // ההגדרה או התרגום של המילה
-    private String definition;
-
-    // מזהה ייחודי של המילה (לשימוש פנימי/ב-Firebase)
-    private String id;
-
-    // מזהה הקבוצה שאליה שייכת המילה
-    private String groupId;
+    private String word; // המילה עצמה באנגלית, לדוגמה: "apple"
+    private boolean known; // האם המשתמש סימן את המילה כ"מוכרת"
+    private String definition; // תרגום או הסבר של המילה, לדוגמה: "תפוח"
+    private String id; // מזהה ייחודי של המילה במסד הנתונים (למשל ב-Firebase)
+    private String groupId; // מזהה של קבוצת המילים (workout) שאליה שייכת המילה
 
     /**
-     * Full constructor for creating a Word object with all fields.
+     * בנאי מלא – מאפשר ליצור מופע של Word עם כל השדות.
      *
-     * @param word       The word itself (e.g., "apple").
-     * @param known      Whether the user marked it as known.
-     * @param definition The word's meaning or translation.
-     * @param id         Unique ID for this word.
-     * @param groupId    ID of the group (workout) this word belongs to.
+     * @param word       טקסט המילה עצמה (למשל "banana")
+     * @param known      האם המשתמש סימן אותה כמוכרת
+     * @param definition תרגום/הסבר של המילה
+     * @param id         מזהה ייחודי של המילה
+     * @param groupId    מזהה הקבוצה (workout) שהמילה שייכת אליה
      */
     public Word(String word, boolean known, String definition, String id, String groupId) {
-        this.word = word;
-        this.known = known;
-        this.definition = definition;
-        this.id = id;
-        this.groupId = groupId;
+        this.word = word; // שומר את טקסט המילה
+        this.known = known; // שומר אם היא מוכרת
+        this.definition = definition; // שומר את ההגדרה
+        this.id = id; // שומר את המזהה
+        this.groupId = groupId; // שומר את מזהה הקבוצה
     }
 
-    /**
-     * Gets the word (text).
-     *
-     * @return The word string.
-     */
+    /** מחזיר את טקסט המילה */
     public String getWord() {
         return word;
     }
 
-    /**
-     * Returns whether the word is marked as known by the user.
-     *
-     * @return true if known, false otherwise.
-     */
+    /** מחזיר true אם המילה סומנה כ"מוכרת" על ידי המשתמש */
     public boolean isKnown() {
         return known;
     }
 
-    /**
-     * Sets the known status of the word.
-     *
-     * @param known Whether the word is known or not.
-     */
+    /** קובע אם המילה מוכרת או לא לפי פרמטר */
     public void setKnown(boolean known) {
         this.known = known;
     }
 
-    /**
-     * Gets the definition or translation of the word.
-     *
-     * @return The definition string.
-     */
+    /** מחזיר את ההגדרה או התרגום של המילה */
     public String getDefinition() {
         return definition;
     }
 
-    /**
-     * Gets the unique ID of the word.
-     *
-     * @return The word's ID.
-     */
+    /** מחזיר את המזהה הייחודי של המילה */
     public String getId() {
         return id;
     }
 
-    /**
-     * Gets the ID of the group to which the word belongs.
-     *
-     * @return The group ID.
-     */
+    /** מחזיר את מזהה קבוצת המילים שהמילה שייכת אליה */
     public String getGroupId() {
         return groupId;
     }

@@ -1,12 +1,12 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // הגדרת החבילה של המחלקה
 
-import android.content.Intent;
-import android.os.Bundle;
-import android.view.View;
-import android.widget.Button;
+import android.content.Intent; // מאפשר פתיחת מסכים אחרים
+import android.os.Bundle; // מחזיק מידע שמועבר בין מסכים
+import android.view.View; // משמש לאירועים על רכיבים במסך
+import android.widget.Button; // רכיב של כפתור במסך
 
-import androidx.activity.EdgeToEdge;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.activity.EdgeToEdge; // מאפשר עיצוב במסך מלא (ללא שוליים)
+import androidx.appcompat.app.AppCompatActivity; // בסיס למסכים עם תמיכה בעיצוב מודרני
 
 /**
  * MainActivity - מסך פתיחה של האפליקציה.
@@ -18,44 +18,40 @@ import androidx.appcompat.app.AppCompatActivity;
  */
 public class MainActivity extends AppCompatActivity {
 
-    // הגדרת שני הכפתורים במסך
-    Button button1, button2;
+    Button button1, button2; // הגדרת משתנים עבור שני הכפתורים: התחברות והרשמה
 
     /**
-     * מתבצע בעת יצירת המסך (onCreate).
-     * קובע את עיצוב המסך, מקשר את הכפתורים, ומאזין ללחיצות.
+     * נקראת כאשר המסך נוצר – כאן מתחילים את כל הפעולות הראשוניות.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+        super.onCreate(savedInstanceState); // קריאה לפונקציית onCreate של המחלקה שממנה ירשנו
 
-        // הפעלת עיצוב Edge-to-Edge (שוליים נסתרים)
-        EdgeToEdge.enable(this);
+        EdgeToEdge.enable(this); // הפעלת תצוגת "edge to edge" – מסך ללא שוליים
 
-        // קביעת קובץ ה-XML של המסך
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main); // קביעת קובץ ה-XML שמצייר את המסך
 
-        // קישור בין רכיבי ה-XML למשתנים בקוד
-        button1 = findViewById(R.id.button);   // כפתור Login
-        button2 = findViewById(R.id.button2);  // כפתור Signup
+        // קישור בין משתני הכפתורים בקוד לבין הכפתורים בקובץ ה-XML
+        button1 = findViewById(R.id.button);   // קישור לכפתור Login
+        button2 = findViewById(R.id.button2);  // קישור לכפתור Signup
 
-        // מאזין ללחיצה על כפתור Login
+        // מאזין ללחיצה על כפתור ההתחברות
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // מעבר למסך login
+                // יצירת כוונה (Intent) לעבור למסך login
                 Intent intent = new Intent(MainActivity.this, login.class);
-                startActivity(intent);
+                startActivity(intent); // התחלת המסך החדש
             }
         });
 
-        // מאזין ללחיצה על כפתור Signup
+        // מאזין ללחיצה על כפתור ההרשמה
         button2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // מעבר למסך signup
+                // יצירת כוונה (Intent) לעבור למסך signup
                 Intent intent = new Intent(MainActivity.this, signup.class);
-                startActivity(intent);
+                startActivity(intent); // התחלת המסך החדש
             }
         });
     }

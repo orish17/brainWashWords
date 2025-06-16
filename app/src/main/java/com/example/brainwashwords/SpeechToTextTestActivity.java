@@ -1,5 +1,6 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // הגדרת החבילה שבה נמצאת המחלקה
 
+// ייבוא מחלקות נחוצות לעבודה עם דיבור, טיימר, תצוגה ו־UI
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -20,104 +21,104 @@ import java.util.Locale;
  */
 public class SpeechToTextTestActivity extends BaseActivity {
 
-    private TextToSpeech tts;
-    private SpeechRecognizer speechRecognizer;
-    private TextView timerText, resultText, feedbackText;
-    private Button playButton, listenButton;
-    private String currentWord = "example"; // מילה קבועה לדוגמה – ניתן להרחיב בהמשך
-    private boolean isTestMode = false;
-    private Switch modeSwitch;
-    private CountDownTimer countDownTimer;
+    private TextToSpeech tts; // מנוע להמרת טקסט לדיבור
+    private SpeechRecognizer speechRecognizer; // מזהה דיבור
+    private TextView timerText, resultText, feedbackText; // תצוגות: טיימר, תוצאה, פידבק
+    private Button playButton, listenButton; // כפתורים להשמעה והאזנה
+    private String currentWord = "example"; // המילה שנבדקת – ניתן להחלפה בעתיד
+    private boolean isTestMode = false; // האם האפליקציה במצב מבחן או תרגול
+    private Switch modeSwitch; // מתג מעבר בין מצב תרגול למבחן
+    private CountDownTimer countDownTimer; // טיימר לספירה לאחור
 
     /**
-     * onCreate – אתחול רכיבי ממשק, הגדרות TTS ודיבור, מצבי תרגול/מבחן.
+     * onCreate – אתחול כל רכיבי המסך, TTS, זיהוי דיבור, תפריט צד, האזנה ללחיצות.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ThemeHelper.applySavedTheme(this);
+        ThemeHelper.applySavedTheme(this); // הגדרת מצב תאורה (כהה/בהיר)
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_speech_to_text_test);
+        setContentView(R.layout.activity_speech_to_text_test); // קביעת layout XML
 
-        // אתחול רכיבי ממשק
+        // קישור רכיבי UI מתוך קובץ ה־XML
         timerText = findViewById(R.id.timerText);
         resultText = findViewById(R.id.resultText);
         feedbackText = findViewById(R.id.feedbackText);
         playButton = findViewById(R.id.playButton);
         listenButton = findViewById(R.id.listenButton);
         modeSwitch = findViewById(R.id.modeSwitch);
-        setupDrawer();
+        setupDrawer(); // תפריט צד
 
-        // אתחול TTS ודיבור
-        setupTTS();
-        setupSpeechRecognizer();
+        setupTTS(); // אתחול TextToSpeech
+        setupSpeechRecognizer(); // אתחול זיהוי דיבור
 
-        // כפתור להפעלת השמעת מילה
+        // לחיצה על כפתור ההשמעה: מדבר את המילה
         playButton.setOnClickListener(v -> speakWord(currentWord));
 
-        // כפתור להאזנה לדיבור של המשתמש
+        // לחיצה על כפתור ההאזנה: במצב מבחן עם טיימר, אחרת תרגול רגיל
         listenButton.setOnClickListener(v -> {
             if (isTestMode) {
-                startTimerAndListen(); // טיימר ואז האזנה
+                startTimerAndListen(); // התחלה עם טיימר
             } else {
-                startListening(); // האזנה ישירה
+                startListening(); // התחלה ישירה
             }
         });
 
-        // החלפת מצב מבחן/תרגול
+        // מתג למעבר בין מצב מבחן למצב תרגול
         modeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            isTestMode = isChecked;
-            timerText.setVisibility(isTestMode ? View.VISIBLE : View.GONE);
+            isTestMode = isChecked; // עדכון המצב
+            timerText.setVisibility(isTestMode ? View.VISIBLE : View.GONE); // הצגת טיימר רק במבחן
             Toast.makeText(this,
-                    isTestMode ? "Test Mode Activated" : "Practice Mode Activated",
+                    isTestMode ? "Test Mode Activated" : "Practice Mode Activated", // הודעה
                     Toast.LENGTH_SHORT).show();
         });
     }
 
     /**
-     * אתחול TextToSpeech – המרה מטקסט לדיבור.
+     * אתחול מנוע TTS – הגדרת שפה ומוכנות לדיבור.
      */
     private void setupTTS() {
         tts = new TextToSpeech(this, status -> {
             if (status != TextToSpeech.ERROR) {
-                tts.setLanguage(Locale.US);
+                tts.setLanguage(Locale.US); // הגדרת שפה לאנגלית אמריקאית
             }
         });
     }
 
     /**
-     * השמעת המילה הנוכחית.
+     * קריאת המילה הנוכחית בקול.
      */
     private void speakWord(String word) {
-        tts.speak(word, TextToSpeech.QUEUE_FLUSH, null, null);
+        tts.speak(word, TextToSpeech.QUEUE_FLUSH, null, null); // דיבור מיידי
     }
 
     /**
-     * אתחול SpeechRecognizer לזיהוי דיבור.
+     * אתחול מנגנון זיהוי דיבור והאזנה לתוצאה.
      */
     private void setupSpeechRecognizer() {
-        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this);
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(this); // יצירת מזהה דיבור
         speechRecognizer.setRecognitionListener(new RecognitionListener() {
-            @Override public void onReadyForSpeech(Bundle params) {}
-            @Override public void onBeginningOfSpeech() {}
-            @Override public void onRmsChanged(float rmsdB) {}
-            @Override public void onBufferReceived(byte[] buffer) {}
-            @Override public void onEndOfSpeech() {}
+
+            @Override public void onReadyForSpeech(Bundle params) {} // מוכנות
+            @Override public void onBeginningOfSpeech() {} // תחילת דיבור
+            @Override public void onRmsChanged(float rmsdB) {} // שינוי עוצמת קול
+            @Override public void onBufferReceived(byte[] buffer) {} // קבלת נתונים
+            @Override public void onEndOfSpeech() {} // סיום דיבור
 
             @Override
             public void onError(int error) {
-                feedbackText.setText("Error recognizing speech. Try again.");
+                feedbackText.setText("Error recognizing speech. Try again."); // שגיאה
             }
 
             /**
-             * טיפול בתוצאה: השוואת הטקסט המדובר למילה הנכונה.
+             * עיבוד התוצאה: בדיקה אם המילה שנאמרה תואמת למילה הנכונה.
              */
             @Override
             public void onResults(Bundle results) {
                 ArrayList<String> matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
                 if (matches != null && !matches.isEmpty()) {
-                    String spokenText = matches.get(0); // המשפט הראשון שנאמר
-                    resultText.setText("You said: " + spokenText);
-                    if (spokenText.equalsIgnoreCase(currentWord)) {
+                    String spokenText = matches.get(0); // קבלת המשפט הראשון שנשמע
+                    resultText.setText("You said: " + spokenText); // תצוגה
+                    if (spokenText.equalsIgnoreCase(currentWord)) { // בדיקה אם נכון
                         feedbackText.setText("✅ Correct!");
                     } else {
                         feedbackText.setText("❌ Try again");
@@ -125,54 +126,54 @@ public class SpeechToTextTestActivity extends BaseActivity {
                 }
             }
 
-            @Override public void onPartialResults(Bundle partialResults) {}
-            @Override public void onEvent(int eventType, Bundle params) {}
+            @Override public void onPartialResults(Bundle partialResults) {} // תוצאה חלקית
+            @Override public void onEvent(int eventType, Bundle params) {} // אירוע כללי
         });
     }
 
     /**
-     * התחלת טיימר של 5 שניות לפני התחלת ההאזנה.
+     * הפעלת טיימר של 5 שניות לפני תחילת האזנה (במצב מבחן).
      */
     private void startTimerAndListen() {
-        timerText.setVisibility(View.VISIBLE);
-        countDownTimer = new CountDownTimer(5000, 1000) {
+        timerText.setVisibility(View.VISIBLE); // הצגת טיימר
+        countDownTimer = new CountDownTimer(5000, 1000) { // טיימר של 5 שניות
             public void onTick(long millisUntilFinished) {
-                timerText.setText("Speak in: " + millisUntilFinished / 1000);
+                timerText.setText("Speak in: " + millisUntilFinished / 1000); // ספירה לאחור
             }
 
             public void onFinish() {
-                timerText.setText("Listening...");
-                startListening();
+                timerText.setText("Listening..."); // התחלה
+                startListening(); // התחלת האזנה
             }
         }.start();
     }
 
     /**
-     * התחלת ההאזנה לקול המשתמש.
+     * התחלת האזנה לדיבור של המשתמש.
      */
     private void startListening() {
-        timerText.setVisibility(View.GONE);
-        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US);
-        speechRecognizer.startListening(intent);
+        timerText.setVisibility(View.GONE); // הסתרת טיימר
+        Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH); // כוונה להאזנה
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM); // מודל שפה
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.US); // שפה אנגלית
+        speechRecognizer.startListening(intent); // התחלת האזנה
     }
 
     /**
-     * שחרור משאבים – TTS, דיבור, טיימר.
+     * שחרור משאבים כשעוזבים את המסך (TTS, זיהוי דיבור, טיימר).
      */
     @Override
     protected void onDestroy() {
         if (tts != null) {
-            tts.stop();
-            tts.shutdown();
+            tts.stop(); // עצירה
+            tts.shutdown(); // סגירה
         }
         if (speechRecognizer != null) {
-            speechRecognizer.destroy();
+            speechRecognizer.destroy(); // ניקוי
         }
         if (countDownTimer != null) {
-            countDownTimer.cancel();
+            countDownTimer.cancel(); // עצירת טיימר
         }
-        super.onDestroy();
+        super.onDestroy(); // סיום רגיל
     }
 }

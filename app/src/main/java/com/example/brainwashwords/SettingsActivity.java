@@ -1,132 +1,123 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // חבילת הפרויקט
 
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.Switch;
-import android.widget.Toast;
+import android.content.Intent; // מאפשר מעבר בין מסכים
+import android.content.SharedPreferences; // לשמירת נתונים מקומיים של המשתמש
+import android.os.Bundle; // מכיל מידע על מצב קודם של המסך
+import android.widget.Button; // כפתור
+import android.widget.EditText; // שדה טקסט להזנה
+import android.widget.Switch; // מתג (למשל מצב כהה)
+import android.widget.Toast; // הודעות קצרות למשתמש
 
 import androidx.annotation.Nullable;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.DatabaseReference; // רפרנס למסד נתונים Firebase
+import com.google.firebase.database.FirebaseDatabase; // גישה למסד Firebase
 
 /**
- * SettingsActivity handles user preferences and actions including:
- * - Updating display name
- * - Toggling dark mode
- * - Resetting progress
- * - Logging out
- *
- * The activity uses SharedPreferences and Firebase Realtime Database
- * to store and retrieve user-specific data.
+ * SettingsActivity - מסך הגדרות:
+ * שינוי שם משתמש, מעבר למצב כהה/בהיר, איפוס התקדמות, התנתקות.
+ * משתמש ב־SharedPreferences וב־Firebase.
  */
 public class SettingsActivity extends BaseActivity {
 
-    private EditText usernameEditText;
-    private Button saveUsernameButton, logoutButton, resetProgressButton;
-    private Switch darkModeSwitch;
-    private SharedPreferences prefs;
-    private String userId;
+    private EditText usernameEditText; // שדה להזנת שם המשתמש
+    private Button saveUsernameButton, logoutButton, resetProgressButton; // כפתורים לפעולות השונות
+    private Switch darkModeSwitch; // מתג מצב כהה/בהיר
+    private SharedPreferences prefs; // אובייקט לשמירת נתונים מקומיים
+    private String userId; // מזהה המשתמש המחובר
 
     /**
-     * Called when the activity is starting.
-     * Sets up UI elements and loads saved preferences.
+     * הפונקציה הראשית שמופעלת כשהמסך נוצר.
+     * מגדירה את הממשק ומבצעת טעינת ערכים מהזיכרון המקומי.
      */
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        ThemeHelper.applySavedTheme(this); // הפעלת מצב תאורה (נושא) שנשמר
+        ThemeHelper.applySavedTheme(this); // החלת נושא (theme) שמור
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_settings);
+        setContentView(R.layout.activity_settings); // קישור לקובץ העיצוב
         setupDrawer(); // תפריט צד
 
-        // גישה ל־SharedPreferences תחת קובץ בשם "settings"
-        prefs = getSharedPreferences("settings", MODE_PRIVATE);
-        userId = prefs.getString("uid", null); // שליפת מזהה המשתמש
+        prefs = getSharedPreferences("settings", MODE_PRIVATE); // טעינת ההגדרות המקומיות
+        userId = prefs.getString("uid", null); // שליפת מזהה המשתמש מההגדרות
 
-        // קישור רכיבי ממשק משתמש
-        usernameEditText = findViewById(R.id.edit_username);
-        saveUsernameButton = findViewById(R.id.btn_save_username);
-        logoutButton = findViewById(R.id.btn_logout);
-        resetProgressButton = findViewById(R.id.btn_reset_stats);
-        darkModeSwitch = findViewById(R.id.switch_dark_mode);
+        // קישור רכיבי ממשק UI
+        usernameEditText = findViewById(R.id.edit_username); // שדה להזנת שם משתמש
+        saveUsernameButton = findViewById(R.id.btn_save_username); // כפתור שמירה
+        logoutButton = findViewById(R.id.btn_logout); // כפתור התנתקות
+        resetProgressButton = findViewById(R.id.btn_reset_stats); // כפתור איפוס התקדמות
+        darkModeSwitch = findViewById(R.id.switch_dark_mode); // מתג מצב כהה
 
-        // טעינת שם המשתמש מההעדפות המקומיות
-        String currentUsername = prefs.getString("username", "");
-        usernameEditText.setText(currentUsername);
+        String currentUsername = prefs.getString("username", ""); // שם משתמש נוכחי מהעדפות
+        usernameEditText.setText(currentUsername); // הצגת השם בטופס
 
-        // הגדרת מצב כהה אם שמור כ־true
-        boolean isDarkMode = prefs.getBoolean("dark_mode", true);
-        darkModeSwitch.setChecked(isDarkMode);
+        boolean isDarkMode = prefs.getBoolean("dark_mode", true); // טעינת מצב כהה
+        darkModeSwitch.setChecked(isDarkMode); // הפעלת המתג בהתאם
 
-        // כאשר המשתמש מחליף מצב תאורה
+        // כשהמשתמש משנה את המצב (כהה/בהיר)
         darkModeSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            ThemeHelper.setNightMode(this, isChecked); // שמירה + החלפת מצב
+            ThemeHelper.setNightMode(this, isChecked); // שמירה והחלת מצב
             recreate(); // רענון המסך
         });
 
-        // טיפול בלחיצות
-        saveUsernameButton.setOnClickListener(v -> handleUsernameSave());
-        logoutButton.setOnClickListener(v -> handleLogout());
-        resetProgressButton.setOnClickListener(v -> handleResetProgress());
+        // מאזינים לפעולות המשתמש
+        saveUsernameButton.setOnClickListener(v -> handleUsernameSave()); // שמירת שם חדש
+        logoutButton.setOnClickListener(v -> handleLogout()); // התנתקות
+        resetProgressButton.setOnClickListener(v -> handleResetProgress()); // איפוס התקדמות
     }
 
     /**
-     * Handles saving the new display name:
-     * - Validates input
-     * - Saves locally to SharedPreferences
-     * - Updates Firebase database
+     * פונקציה לשמירת שם חדש:
+     * - בודקת אם השם חוקי
+     * - שומרת בזיכרון מקומי
+     * - מעדכנת ב-Firebase
      */
     private void handleUsernameSave() {
-        String newName = usernameEditText.getText().toString().trim();
+        String newName = usernameEditText.getText().toString().trim(); // קריאת שם חדש מהשדה
+
         if (newName.isEmpty()) {
-            Toast.makeText(this, "Please enter a valid name", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Please enter a valid name", Toast.LENGTH_SHORT).show(); // הודעת שגיאה אם ריק
             return;
         }
 
         if (userId == null) {
-            Toast.makeText(this, "User ID not found. Please log in again.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "User ID not found. Please log in again.", Toast.LENGTH_LONG).show(); // אם אין משתמש
             return;
         }
 
-        // שמירת השם החדש בהעדפות מקומיות
-        prefs.edit().putString("username", newName).apply();
+        prefs.edit().putString("username", newName).apply(); // שמירת שם חדש מקומית
 
-        // עדכון השם במסד הנתונים
-        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId);
-        userRef.child("displayName").setValue(newName)
+        DatabaseReference userRef = FirebaseDatabase.getInstance().getReference("users").child(userId); // רפרנס למשתמש
+        userRef.child("displayName").setValue(newName) // עדכון ב־Firebase
                 .addOnSuccessListener(unused -> Toast.makeText(this, "Username updated", Toast.LENGTH_SHORT).show())
                 .addOnFailureListener(e -> Toast.makeText(this, "Failed to update name in Firebase", Toast.LENGTH_SHORT).show());
     }
 
     /**
-     * Logs out the user by clearing all saved preferences,
-     * then returns to the login screen.
+     * התנתקות מהחשבון:
+     * - מוחקת את כל ההעדפות המקומיות
+     * - חוזרת למסך login
      */
     private void handleLogout() {
         prefs.edit().clear().apply(); // איפוס ההעדפות
         startActivity(new Intent(this, login.class)); // מעבר למסך התחברות
-        finish(); // סגירת המסך הנוכחי
+        finish(); // סיום המסך
     }
 
     /**
-     * Resets the user's test progress by deleting the "tests" node
-     * under the current user's data in Firebase.
+     * איפוס התקדמות מבחנים:
+     * - מוחק את הציונים מה־Firebase
      */
     private void handleResetProgress() {
         if (userId == null) {
-            Toast.makeText(this, "User ID not found. Cannot reset progress.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "User ID not found. Cannot reset progress.", Toast.LENGTH_SHORT).show(); // לא נמצא משתמש
             return;
         }
 
-        // הסרת ציון המבחנים מ־Firebase
         FirebaseDatabase.getInstance().getReference("users")
                 .child(userId)
                 .child("tests")
-                .removeValue()
-                .addOnSuccessListener(unused -> Toast.makeText(this, "Progress reset successfully", Toast.LENGTH_SHORT).show())//
+                .removeValue() // מחיקת התקדמות
+                .addOnSuccessListener(unused -> Toast.makeText(this, "Progress reset successfully", Toast.LENGTH_SHORT).show())
                 .addOnFailureListener(e -> Toast.makeText(this, "Failed to reset progress", Toast.LENGTH_SHORT).show());
     }
 }

@@ -1,5 +1,6 @@
-package com.example.brainwashwords;
+package com.example.brainwashwords; // הגדרת שם החבילה
 
+// ייבוא מחלקות של אנדרואיד לצורך אינטנט, עיצוב, אנימציות ותצוגה
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
@@ -8,76 +9,76 @@ import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.app.AppCompatActivity; // פעילות בסיסית
 
+// ייבוא Firestore לשליפת מילים
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 /**
- * TestMenuActivity displays the main menu for selecting the type of quiz/test.
- * It includes validation to ensure that the user has marked at least 4 known words before proceeding.
+ * TestMenuActivity מציג את תפריט הבחירה של סוג מבחן.
+ * מוודא שהמשתמש סימן לפחות 4 מילים כ־known לפני שמאפשר להתחיל מבחן.
  */
-public class TestMenuActivity extends BaseActivity {
+public class TestMenuActivity extends BaseActivity { // ירושה מ־BaseActivity לצורך תפריט צד
 
-    // כפתורים לכל אחד מסוגי המבחנים
+    // הגדרת כפתורים לכל סוג מבחן
     Button btnMultipleChoice, btnFillInBlank, btnAudioTest, btnAiQuiz, btnStt;
 
-    // חיבור למסד הנתונים של Firebase
+    // אובייקט התחברות למסד הנתונים Firestore
     private FirebaseFirestore db;
 
-    // משתנה עזר שמכיל את מספר המילים המסומנות כ-"known"
+    // משתנה עזר לזיהוי כמה מילים מסומנות כ־known
     private int knownWordsCount = 0;
 
     /**
-     * Called when the activity is starting.
-     * Sets up UI elements, drawer navigation, and listeners for test selection.
+     * נקרא כאשר המסך נוצר (onCreate).
+     * מבצע אתחול עיצוב, קישור כפתורים, ותפריט צד.
      */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        ThemeHelper.applySavedTheme(this); // החלת מצב תאורה נבחר (כהה/בהיר)
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_test_menu);
-        setupDrawer(); // תפריט צד
+        ThemeHelper.applySavedTheme(this); // החלת ערכת עיצוב (כהה/בהיר)
+        super.onCreate(savedInstanceState); // קריאה למחלקת־אם
+        setContentView(R.layout.activity_test_menu); // הגדרת קובץ XML כ־layout
+        setupDrawer(); // הפעלת תפריט הצד
 
-        // השמת כפתורים לפי מזהי ה־XML
-        btnMultipleChoice = findViewById(R.id.btnMultipleChoice);
-        btnFillInBlank = findViewById(R.id.btnFillInBlank);
-        btnAudioTest = findViewById(R.id.btnAudioTest);
-        btnAiQuiz = findViewById(R.id.btnAiQuiz);
-        btnStt = findViewById(R.id.btnStt);
+        // קישור כל כפתור למזהה שלו בקובץ XML
+        btnMultipleChoice = findViewById(R.id.btnMultipleChoice); // כפתור מבחן רב־ברירה
+        btnFillInBlank = findViewById(R.id.btnFillInBlank);       // כפתור מבחן השלמה
+        btnAudioTest = findViewById(R.id.btnAudioTest);           // כפתור מבחן שמיעה
+        btnAiQuiz = findViewById(R.id.btnAiQuiz);                 // כפתור מבחן AI
+        btnStt = findViewById(R.id.btnStt);                       // כפתור מבחן דיבור
 
-        db = FirebaseFirestore.getInstance(); // אתחול גישה ל-Firestore
+        db = FirebaseFirestore.getInstance(); // אתחול חיבור למסד הנתונים Firestore
 
-        /**
-         * Listener שמופעל כשנלחץ כפתור מבחן.
-         * קודם בודק האם יש לפחות 4 מילים מסומנות כ-known.
-         * אם כן, מפנה למסך המבחן המתאים.
-         */
+        // Listener אחיד לכל כפתור מבחן – עם בדיקה מוקדמת
         View.OnClickListener protectedClickListener = view -> {
-            // אפקט אנימציה לחיצה
-            Animation anim = AnimationUtils.loadAnimation(this, R.anim.button_click_scale);
-            view.startAnimation(anim);
+            Animation anim = AnimationUtils.loadAnimation(this, R.anim.button_click_scale); // אנימציית לחיצה
+            view.startAnimation(anim); // הפעלת האנימציה
 
-            // טעינת מילים מ-Firebase ובדיקת כמה מסומנות כ-known
+            // שליפת כל המילים מהקבוצה workout1
             db.collection("groups").document("workout1").collection("words")
                     .get()
                     .addOnSuccessListener(result -> {
-                        int count = 0;
+                        int count = 0; // מונה מילים מסומנות
                         for (QueryDocumentSnapshot doc : result) {
-                            Boolean known = doc.getBoolean("known");
+                            Boolean known = doc.getBoolean("known"); // שליפת ערך known
                             if (Boolean.TRUE.equals(known)) {
-                                count++;
+                                count++; // אם סומן – העלה את המונה
                             }
                         }
 
-                        // פחות מ־4 מילים = לא מאפשר מבחן
+                        // בדיקה אם יש לפחות 4 מילים ידועות
                         if (count < 4) {
-                            Toast.makeText(this, "You must mark at least 4 known words before taking a test!", Toast.LENGTH_LONG).show();
+                            Toast.makeText(this,
+                                    "You must mark at least 4 known words before taking a test!",
+                                    Toast.LENGTH_LONG).show(); // הצגת הודעת שגיאה
                         } else {
-                            // זיהוי סוג המבחן לפי מזהה הכפתור
-                            Class<?> activityClass = null;
-                            int viewId = view.getId();
+                            // התחלת המבחן לפי סוג הכפתור שנלחץ
+                            Class<?> activityClass = null; // מחלקה שנפעיל
 
+                            int viewId = view.getId(); // מזהה הכפתור
+
+                            // התאמה בין מזהה הכפתור למחלקת המבחן
                             if (viewId == R.id.btnMultipleChoice)
                                 activityClass = MultipleChoiceActivity.class;
                             else if (viewId == R.id.btnFillInBlank)
@@ -89,18 +90,18 @@ public class TestMenuActivity extends BaseActivity {
                             else if (viewId == R.id.btnStt)
                                 activityClass = SpeechToTextTestActivity.class;
 
-                            // אם מצאנו אקטיביטי מתאים – מפעילים אותו
+                            // אם זוהתה פעילות מתאימה – להפעיל אותה
                             if (activityClass != null) {
-                                startActivity(new Intent(this, activityClass));
+                                startActivity(new Intent(this, activityClass)); // מעבר למסך מבחן
                             }
                         }
                     })
                     .addOnFailureListener(e ->
-                            Toast.makeText(this, "Error checking known words!", Toast.LENGTH_SHORT).show()
-                    );
+                            Toast.makeText(this,
+                                    "Error checking known words!", Toast.LENGTH_SHORT).show()); // שגיאה בגישה למסד הנתונים
         };
 
-        // השמת הליסטנר לכל כפתור מבחן
+        // שיוך ה־listener לכל כפתור מבחן
         btnMultipleChoice.setOnClickListener(protectedClickListener);
         btnFillInBlank.setOnClickListener(protectedClickListener);
         btnAudioTest.setOnClickListener(protectedClickListener);
